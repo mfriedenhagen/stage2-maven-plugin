@@ -19,13 +19,25 @@ package org.apache.maven.plugins.stage;
  * under the License.
  */
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.Writer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.metadata.Metadata;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Writer;
-import org.apache.maven.wagon.CommandExecutor;
-import org.apache.maven.wagon.CommandExecutionException;
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
@@ -40,29 +52,7 @@ import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * @author Jason van Zyl
@@ -85,17 +75,9 @@ public class DefaultRepositoryCopier
     {
         String prefix = "staging-plugin";
 
-        String fileName = prefix + "-" + version + ".zip";
-
         String tempdir = System.getProperty( "java.io.tmpdir" );
 
         logger.debug( "Writing all output to " + tempdir );
-
-        // Create the renameScript script
-
-        String renameScriptName = prefix + "-" + version + "-rename.sh";
-
-        File renameScript = new File( tempdir, renameScriptName );
 
         // Work directory
 
@@ -105,9 +87,8 @@ public class DefaultRepositoryCopier
 
         basedir.mkdirs();
 
-        String protocol = sourceRepository.getProtocol();
-
         Wagon sourceWagon = wagonManager.getWagon( sourceRepository );
+
         AuthenticationInfo sourceAuth = wagonManager.getAuthenticationInfo( sourceRepository.getId() );
 
         sourceWagon.connect( sourceRepository, sourceAuth );
@@ -123,11 +104,6 @@ public class DefaultRepositoryCopier
         for ( Iterator i = files.iterator(); i.hasNext(); )
         {
             String s = (String) i.next();
-
-            if ( s.indexOf( ".svn" ) >= 0 )
-            {
-                continue;
-            }
 
             File f = new File( basedir, s );
 
@@ -148,19 +124,9 @@ public class DefaultRepositoryCopier
 
         Wagon targetWagon = wagonManager.getWagon( targetRepository );
 
-        if ( ! ( targetWagon instanceof CommandExecutor ) )
-        {
-            throw new CommandExecutionException( "Wagon class '" + targetWagon.getClass().getName() +
-                "' in use for target repository is not a CommandExecutor" );
-        }
-
         AuthenticationInfo targetAuth = wagonManager.getAuthenticationInfo( targetRepository.getId() );
 
         targetWagon.connect( targetRepository, targetAuth );
-
-        PrintWriter rw = new PrintWriter( new FileWriter( renameScript ) );
-
-        File archive = new File( tempdir, fileName );
 
         for ( Iterator i = files.iterator(); i.hasNext(); )
         {
@@ -196,154 +162,12 @@ public class DefaultRepositoryCopier
                     throw new IOException( "Metadata file is corrupt " + s + " Reason: " + e.getMessage() );
                 }
             }
-        }
-
-        Set moveCommands = new TreeSet();
-
-        // ----------------------------------------------------------------------------
-        // Create the Zip file that we will deploy to the targetRepositoryUrl stage
-        // ----------------------------------------------------------------------------
-
-        logger.info( "Creating zip file." );
-
-        OutputStream os = new FileOutputStream( archive );
-
-        ZipOutputStream zos = new ZipOutputStream( os );
-
-        scanDirectory( basedir, basedir, zos, version, moveCommands );
-
-        // ----------------------------------------------------------------------------
-        // Create the renameScript script. This is as atomic as we can
-        // ----------------------------------------------------------------------------
-
-        logger.info( "Creating rename script." );
-
-        for ( Iterator i = moveCommands.iterator(); i.hasNext(); )
-        {
-            String s = (String) i.next();
-
-            // We use an explicit unix '\n' line-ending here instead of using the println() method.
-            // Using println() will cause files and folders to have a '\r' at the end if the plugin is run on Windows.
-            rw.print( s + "\n" );
-        }
-
-        IOUtil.close( rw );
-
-        ZipEntry e = new ZipEntry( renameScript.getName() );
-
-        zos.putNextEntry( e );
-
-        InputStream is = new FileInputStream( renameScript );
-
-        IOUtil.copy( is, zos );
-
-        IOUtil.close( is );
-
-        IOUtil.close( zos );
-
-        sourceWagon.disconnect();
-
-        // Push the Zip to the target system
-
-        logger.info( "Uploading zip file to the target repository." );
-
-        targetWagon.put( archive, fileName );
-
-        logger.info( "Unpacking zip file on the target machine." );
-
-        String targetRepoBaseDirectory = targetRepository.getBasedir();
-
-        // We use the super quiet option here as all the noise seems to kill/stall the connection
-
-        String command = "unzip -o -qq -d " + targetRepoBaseDirectory + " " + targetRepoBaseDirectory + "/" + fileName;
-
-        ( (CommandExecutor) targetWagon ).executeCommand( command );
-
-        logger.info( "Deleting zip file from the target repository." );
-
-        command = "rm -f " + targetRepoBaseDirectory + "/" + fileName;
-
-        ( (CommandExecutor) targetWagon ).executeCommand( command );
-
-        logger.info( "Running rename script on the target machine." );
-
-        command = "cd " + targetRepoBaseDirectory + "; sh " + renameScriptName;
-
-        ( (CommandExecutor) targetWagon ).executeCommand( command );
-
-        logger.info( "Deleting rename script from the target repository." );
-
-        command = "rm -f " + targetRepoBaseDirectory + "/" + renameScriptName;
-
-        ( (CommandExecutor) targetWagon ).executeCommand( command );
-
-        targetWagon.disconnect();
-    }
-
-    private void scanDirectory( File basedir, File dir, ZipOutputStream zos, String version, Set moveCommands )
-        throws IOException
-    {
-        if ( dir == null )
-        {
-            return;
-        }
-
-        File[] files = dir.listFiles();
-
-        for ( int i = 0; i < files.length; i++ )
-        {
-            File f = files[i];
-
-            if ( f.isDirectory() )
-            {
-                if ( f.getName().equals( ".svn" ) )
-                {
-                    continue;
-                }
-
-                if ( f.getName().endsWith( version ) )
-                {
-                    String s = f.getAbsolutePath().substring( basedir.getAbsolutePath().length() + 1 );
-                    s = StringUtils.replace( s, "\\", "/" );
-
-                    moveCommands.add( "mv " + s + IN_PROCESS_MARKER + " " + s );
-                }
-
-                scanDirectory( basedir, f, zos, version, moveCommands );
-            }
-            else
-            {
-                InputStream is = new FileInputStream( f );
-
-                String s = f.getAbsolutePath().substring( basedir.getAbsolutePath().length() + 1 );                
-                s = StringUtils.replace( s, "\\", "/" );
-
-                // We are marking any version directories with the in-process flag so that
-                // anything being unpacked on the target side will not be recogized by Maven
-                // and so users cannot download partially uploaded files.
-
-                String vtag = "/" + version;
-
-                s = StringUtils.replace( s, vtag + "/", vtag + IN_PROCESS_MARKER + "/" );
-
-                ZipEntry e = new ZipEntry( s );
-
-                zos.putNextEntry( e );
-
-                IOUtil.copy( is, zos );
-
-                IOUtil.close( is );
-
-                int idx = s.indexOf( IN_PROCESS_MARKER );
-
-                if ( idx > 0 )
-                {
-                    String d = s.substring( 0, idx );
-
-                    moveCommands.add( "mv " + d + IN_PROCESS_MARKER + " " + d );
-                }
+            if (!(s.endsWith(".sha1") || s.endsWith(".md5"))) {
+                logger.info("XXXX Upload" + s);
+                targetWagon.put(new File(basedir, s), s);
             }
         }
+
     }
 
     private void mergeMetadata( File existingMetadata )
@@ -382,21 +206,22 @@ public class DefaultRepositoryCopier
 
         try
         {
-            File newMd5 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".md5" + IN_PROCESS_MARKER );
-
-            FileUtils.fileWrite( newMd5.getAbsolutePath(), checksum( existingMetadata, MD5 ) );
-
             File oldMd5 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".md5" );
 
             oldMd5.delete();
 
-            File newSha1 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1" + IN_PROCESS_MARKER );
+            File newMd5 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".md5" );
 
-            FileUtils.fileWrite( newSha1.getAbsolutePath(), checksum( existingMetadata, SHA1 ) );
+            FileUtils.fileWrite( newMd5.getAbsolutePath(), checksum( existingMetadata, MD5 ) );
 
             File oldSha1 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1" );
 
             oldSha1.delete();
+
+            File newSha1 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1" );
+
+            FileUtils.fileWrite( newSha1.getAbsolutePath(), checksum( existingMetadata, SHA1 ) );
+
         }
         catch ( NoSuchAlgorithmException e )
         {
@@ -406,6 +231,8 @@ public class DefaultRepositoryCopier
         // We have the new merged copy so we're good
 
         stagedMetadataFile.delete();
+
+        existingMetadata.renameTo(stagedMetadataFile);
     }
 
     private String checksum( File file,
@@ -463,20 +290,22 @@ public class DefaultRepositoryCopier
     {
         try
         {
-            List files = wagon.getFileList( basePath );
+            if ( basePath.indexOf( ".svn" ) >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index") ) {
+            } else {
+                List files = wagon.getFileList( basePath );
 
-            if ( files.isEmpty() )
-            {
-                collected.add( basePath );
-            }
-            else
-            {
-                basePath = basePath + "/";
-                for ( Iterator iterator = files.iterator(); iterator.hasNext(); )
+                if ( files.isEmpty() )
                 {
-                    String file = (String) iterator.next();
-                    logger.info( "Found file in the source repository: " + file );
-                    scan( wagon, basePath + file, collected );
+                    collected.add( basePath );
+                }
+                else
+                {
+                    for ( Iterator iterator = files.iterator(); iterator.hasNext(); )
+                    {
+                        String file = (String) iterator.next();
+                        logger.info( "Found file in the source repository: " + file );
+                        scan( wagon, basePath + file, collected );
+                    }
                 }
             }
         }
