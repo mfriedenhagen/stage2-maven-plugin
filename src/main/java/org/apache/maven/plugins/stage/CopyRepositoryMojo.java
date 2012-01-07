@@ -70,10 +70,9 @@ public class CopyRepositoryMojo
     private String targetRepositoryId;
 
     /**
-     * The version of the artifact that is to be copied.
+     * The GAV coordinates of the artifact that is to be copied.
      * <p>
-     * <b>Note:</b> This is currently only used for naming temporary files.
-     * <i>All</i> versions of the artifacts will be copied.
+     * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
      * </p>
      *
      * @parameter expression="${version}"

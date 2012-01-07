@@ -27,11 +27,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -52,6 +55,7 @@ import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
@@ -61,6 +65,30 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 public class DefaultRepositoryCopier
     implements LogEnabled, RepositoryCopier
 {
+    static class Gav {
+
+        final String groupId;
+        final String artifactId;
+        final String version;
+        final Pattern pattern;
+
+        Gav(String groupId, String artifactId, String version) {
+            this.groupId = StringUtils.join(StringUtils.split(groupId, "."), "/");
+            this.artifactId = artifactId;
+            this.version = version;
+            final String escapedVersion = StringUtils.replace(version, ".", "\\.");
+            if (artifactId.equals("*")) {
+                pattern = Pattern.compile(StringUtils.join(new String[]{this.groupId, ".*", escapedVersion}, "/"));
+            } else {
+                pattern = Pattern.compile(StringUtils.join(new String[]{this.groupId, this.artifactId, escapedVersion}, "/"));
+            }
+        }
+
+        public boolean matches(String file) {
+            return pattern.matcher(file).find();
+        }
+
+    }
     private MetadataXpp3Reader reader = new MetadataXpp3Reader();
 
     private MetadataXpp3Writer writer = new MetadataXpp3Writer();
@@ -73,15 +101,22 @@ public class DefaultRepositoryCopier
     public void copy( Repository sourceRepository, Repository targetRepository, String version )
         throws WagonException, IOException
     {
+        String[] gavComponents = StringUtils.split(version, ":");
+        if ( gavComponents.length!=3 ) {
+            throw new IllegalArgumentException("version must have groupId:artifactId:version, where artifactId may be *");
+        }
+
+        Gav gav = new Gav(gavComponents[0], gavComponents[1], gavComponents[2]);
+
         String prefix = "staging-plugin";
 
         String tempdir = System.getProperty( "java.io.tmpdir" );
 
-        logger.debug( "Writing all output to " + tempdir );
+        logger.info( "Writing all output to " + tempdir );
 
         // Work directory
 
-        File basedir = new File( tempdir, prefix + "-" + version );
+        File basedir = new File( tempdir, prefix + "-" + gav.version );
 
         FileUtils.deleteDirectory( basedir );
 
@@ -95,9 +130,23 @@ public class DefaultRepositoryCopier
 
         logger.info( "Looking for files in the source repository." );
 
-        List files = new ArrayList();
+        List<String> rawFiles = new ArrayList<String>();
 
-        scan( sourceWagon, "", files );
+        scan( sourceWagon, "", rawFiles );
+
+        logger.debug("all files found in staging repository" + rawFiles);
+
+        List<String> files = new ArrayList();
+        for (String file : rawFiles) {
+            if (gav.matches(file)) {
+                files.add(file);
+            }
+        }
+
+        // Need to sort the files, otherwise the sha1 or md5 might be uploaded before the concrete files,
+        // which will result in an error.
+        Collections.sort(files);
+        logger.info("Files to upload found in staging repository" + files);
 
         logger.info( "Downloading files from the source repository to: " + basedir );
 
@@ -109,7 +158,7 @@ public class DefaultRepositoryCopier
 
             FileUtils.mkdir( f.getParentFile().getAbsolutePath() );
 
-            logger.info( "Downloading file from the source repository: " + s );
+            logger.debug( "Downloading file from the source repository: " + s );
 
             sourceWagon.get( s, f );
         }
@@ -128,9 +177,11 @@ public class DefaultRepositoryCopier
 
         targetWagon.connect( targetRepository, targetAuth );
 
-        for ( Iterator i = files.iterator(); i.hasNext(); )
+        final String targetRepositoryUrl = targetRepository.getUrl();
+        final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl : targetRepositoryUrl + "/");
+
+        for ( String s : files )
         {
-            String s = (String) i.next();
 
             if ( s.startsWith( "/" ) )
             {
@@ -162,10 +213,9 @@ public class DefaultRepositoryCopier
                     throw new IOException( "Metadata file is corrupt " + s + " Reason: " + e.getMessage() );
                 }
             }
-            if (!(s.endsWith(".sha1") || s.endsWith(".md5"))) {
-                logger.info("XXXX Upload" + s);
-                targetWagon.put(new File(basedir, s), s);
-            }
+
+            logger.info("Deploy " + targetRepositoryUri.resolve(s));
+            targetWagon.put(new File(basedir, s), s);
         }
 
     }
@@ -303,7 +353,7 @@ public class DefaultRepositoryCopier
                     for ( Iterator iterator = files.iterator(); iterator.hasNext(); )
                     {
                         String file = (String) iterator.next();
-                        logger.info( "Found file in the source repository: " + file );
+                        logger.debug( "Found file in the source repository: " + file );
                         scan( wagon, basePath + file, collected );
                     }
                 }
