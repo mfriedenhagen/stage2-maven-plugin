@@ -10,13 +10,14 @@ import org.apache.maven.wagon.repository.Repository;
 import java.io.File;
 import java.io.Reader;
 import java.io.FileReader;
+import java.util.Arrays;
 import java.util.List;
 
 /** @author Jason van Zyl */
 public class RepositoryCopierTest
     extends PlexusTestCase
 {
-    private String version = "2.0.6";
+    private String[] version = new String[]{"2.0.6"};
 
     private MetadataXpp3Reader reader = new MetadataXpp3Reader();
 
@@ -82,7 +83,7 @@ public class RepositoryCopierTest
     {
         File basedir = new File( repo, "org/apache/maven/" + artifact );
 
-        File versionDir = new File( basedir, version );
+        File versionDir = new File( basedir, version[0] );
 
         assertTrue( versionDir.exists() );
 
