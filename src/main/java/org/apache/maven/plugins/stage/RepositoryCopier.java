@@ -27,8 +27,7 @@ import org.apache.maven.wagon.repository.Repository;
 /**
  * @author Jason van Zyl
  */
-public interface RepositoryCopier
-{
+public interface RepositoryCopier {
     String ROLE = RepositoryCopier.class.getName();
 
     String IN_PROCESS_MARKER = ".rip";
@@ -39,6 +38,6 @@ public interface RepositoryCopier
 
     String MAVEN_METADATA = "maven-metadata.xml";
 
-    void copy( Repository sourceRepository, Repository targetRepository, String[] gavStrings )
-        throws WagonException, IOException;
+    void copy(Repository sourceRepository, Repository targetRepository, String[] gavStrings) throws WagonException,
+            IOException;
 }

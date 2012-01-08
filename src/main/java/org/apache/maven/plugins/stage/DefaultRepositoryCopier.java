@@ -61,15 +61,17 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  * @author Jason van Zyl
  * @plexus.component
  */
-public class DefaultRepositoryCopier
-    implements LogEnabled, RepositoryCopier
-{
+public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
     static class Gav {
 
         final String groupId;
+
         final String artifactId;
+
         final String version;
+
         final Pattern patternFiles;
+
         final Pattern patternMeta;
 
         Gav(String groupId, String artifactId, String version) {
@@ -88,11 +90,11 @@ public class DefaultRepositoryCopier
 
         /**
          * Compiles a pattern from the splitted string combined with '/'.
-         *
+         * 
          * @param split
          * @return
          */
-        private Pattern compile(final String...split) {
+        private Pattern compile(final String... split) {
             return Pattern.compile(toPath(split));
         }
 
@@ -106,7 +108,7 @@ public class DefaultRepositoryCopier
 
         /**
          * Escape regex patterns in the string.
-         *
+         * 
          * @param version
          * @return
          */
@@ -120,8 +122,9 @@ public class DefaultRepositoryCopier
 
         public static Gav valueOf(String version) {
             String[] gavComponents = StringUtils.split(version, ":");
-            if ( gavComponents.length!=3 ) {
-                throw new IllegalArgumentException("version must have groupId:artifactId:version, where artifactId may be *");
+            if (gavComponents.length != 3) {
+                throw new IllegalArgumentException(
+                        "version must have groupId:artifactId:version, where artifactId may be *");
             }
             return new Gav(gavComponents[0], gavComponents[1], gavComponents[2]);
         }
@@ -136,9 +139,8 @@ public class DefaultRepositoryCopier
 
     private Logger logger;
 
-    public void copy( Repository sourceRepository, Repository targetRepository, String[] gavStrings )
-        throws WagonException, IOException
-    {
+    public void copy(Repository sourceRepository, Repository targetRepository, String[] gavStrings)
+            throws WagonException, IOException {
         for (String gavString : gavStrings) {
             final Gav gav = Gav.valueOf(gavString);
             copy(sourceRepository, targetRepository, gav);
@@ -165,29 +167,29 @@ public class DefaultRepositoryCopier
 
         // Work directory
 
-        File basedir = new File( System.getProperty( "java.io.tmpdir" ), prefix + "-" + gav.version );
+        File basedir = new File(System.getProperty("java.io.tmpdir"), prefix + "-" + gav.version);
 
-        logger.info( "Writing all output to " + basedir );
+        logger.info("Writing all output to " + basedir);
 
-        FileUtils.deleteDirectory( basedir );
+        FileUtils.deleteDirectory(basedir);
 
         basedir.mkdirs();
 
-        Wagon sourceWagon = wagonManager.getWagon( sourceRepository );
+        Wagon sourceWagon = wagonManager.getWagon(sourceRepository);
 
-        AuthenticationInfo sourceAuth = wagonManager.getAuthenticationInfo( sourceRepository.getId() );
+        AuthenticationInfo sourceAuth = wagonManager.getAuthenticationInfo(sourceRepository.getId());
 
-        sourceWagon.connect( sourceRepository, sourceAuth );
+        sourceWagon.connect(sourceRepository, sourceAuth);
 
-        logger.info( "Scanning source repository for all files." );
+        logger.info("Scanning source repository for all files.");
 
         List<String> rawFiles = new ArrayList<String>();
 
-        scan( sourceWagon, "", rawFiles );
+        scan(sourceWagon, "", rawFiles);
 
         logger.debug("all files found in staging repository" + rawFiles);
 
-        logger.info( "Scanned source repository for all files, found " +  rawFiles.size() + " files.");
+        logger.info("Scanned source repository for all files, found " + rawFiles.size() + " files.");
 
         List<String> files = new ArrayList<String>();
         for (String file : rawFiles) {
@@ -199,22 +201,21 @@ public class DefaultRepositoryCopier
         // Need to sort the files, otherwise the sha1 or md5 might be uploaded before the concrete files,
         // which will result in an error.
         Collections.sort(files);
-        logger.info("Found " +  files.size() +  " matching files: " + files );
+        logger.info("Found " + files.size() + " matching files: " + files);
 
-        logger.info( "Downloading files from the source repository to " + basedir );
+        logger.info("Downloading files from the source repository to " + basedir);
 
-        for ( String s : files )
-        {
-            File f = new File( basedir, s );
+        for (String s : files) {
+            File f = new File(basedir, s);
 
-            FileUtils.mkdir( f.getParentFile().getAbsolutePath() );
+            FileUtils.mkdir(f.getParentFile().getAbsolutePath());
 
-            logger.debug( "Downloading file from the source repository: " + s );
+            logger.debug("Downloading file from the source repository: " + s);
 
-            sourceWagon.get( s, f );
+            sourceWagon.get(s, f);
         }
 
-        logger.info( "Downloaded "  + files.size() + "  files from the source repository to " + basedir );
+        logger.info("Downloaded " + files.size() + "  files from the source repository to " + basedir);
 
         // ----------------------------------------------------------------------------
         // Now all the files are present locally and now we are going to grab the
@@ -222,48 +223,40 @@ public class DefaultRepositoryCopier
         // so that we can merge the metadata.
         // ----------------------------------------------------------------------------
 
-        logger.info( "Downloading metadata from the target repository." );
+        logger.info("Downloading metadata from the target repository.");
 
-        Wagon targetWagon = wagonManager.getWagon( targetRepository );
+        Wagon targetWagon = wagonManager.getWagon(targetRepository);
 
-        AuthenticationInfo targetAuth = wagonManager.getAuthenticationInfo( targetRepository.getId() );
+        AuthenticationInfo targetAuth = wagonManager.getAuthenticationInfo(targetRepository.getId());
 
-        targetWagon.connect( targetRepository, targetAuth );
+        targetWagon.connect(targetRepository, targetAuth);
 
         final String targetRepositoryUrl = targetRepository.getUrl();
-        final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl : targetRepositoryUrl + "/");
+        final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl
+                : targetRepositoryUrl + "/");
 
-        for ( String s : files )
-        {
+        for (String s : files) {
 
-            if ( s.startsWith( "/" ) )
-            {
-                s = s.substring( 1 );
+            if (s.startsWith("/")) {
+                s = s.substring(1);
             }
 
-            if ( s.endsWith( MAVEN_METADATA ) )
-            {
-                File emf = new File( basedir, s + IN_PROCESS_MARKER );
+            if (s.endsWith(MAVEN_METADATA)) {
+                File emf = new File(basedir, s + IN_PROCESS_MARKER);
 
-                try
-                {
-                    targetWagon.get( s, emf );
-                }
-                catch ( ResourceDoesNotExistException e )
-                {
+                try {
+                    targetWagon.get(s, emf);
+                } catch (ResourceDoesNotExistException e) {
                     // We don't have an equivalent on the targetRepositoryUrl side because we have something
                     // new on the sourceRepositoryUrl side so just skip the metadata merging.
 
                     continue;
                 }
 
-                try
-                {
-                    mergeMetadata( emf );
-                }
-                catch ( XmlPullParserException e )
-                {
-                    throw new IOException( "Metadata file is corrupt " + s + " Reason: " + e.getMessage() );
+                try {
+                    mergeMetadata(emf);
+                } catch (XmlPullParserException e) {
+                    throw new IOException("Metadata file is corrupt " + s + " Reason: " + e.getMessage());
                 }
             }
 
@@ -272,62 +265,57 @@ public class DefaultRepositoryCopier
         }
     }
 
-    private void mergeMetadata( File existingMetadata )
-        throws IOException, XmlPullParserException
-    {
+    private void mergeMetadata(File existingMetadata) throws IOException, XmlPullParserException {
         // Existing Metadata in target stage
 
-        Reader existingMetadataReader = new FileReader( existingMetadata );
+        Reader existingMetadataReader = new FileReader(existingMetadata);
 
-        Metadata existing = reader.read( existingMetadataReader );
+        Metadata existing = reader.read(existingMetadataReader);
 
         // Staged Metadata
 
-        File stagedMetadataFile = new File( existingMetadata.getParentFile(), MAVEN_METADATA );
+        File stagedMetadataFile = new File(existingMetadata.getParentFile(), MAVEN_METADATA);
 
-        Reader stagedMetadataReader = new FileReader( stagedMetadataFile );
+        Reader stagedMetadataReader = new FileReader(stagedMetadataFile);
 
-        Metadata staged = reader.read( stagedMetadataReader );
+        Metadata staged = reader.read(stagedMetadataReader);
 
         // Merge
 
-        existing.merge( staged );
+        existing.merge(staged);
 
-        Writer writer = new FileWriter( existingMetadata );
+        Writer writer = new FileWriter(existingMetadata);
 
-        this.writer.write( writer, existing );
+        this.writer.write(writer, existing);
 
-        IOUtil.close( writer );
+        IOUtil.close(writer);
 
-        IOUtil.close( stagedMetadataReader );
+        IOUtil.close(stagedMetadataReader);
 
-        IOUtil.close( existingMetadataReader );
+        IOUtil.close(existingMetadataReader);
 
         // Mark all metadata as in-process and regenerate the checksums as they will be different
         // after the merger
 
-        try
-        {
-            File oldMd5 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".md5" );
+        try {
+            File oldMd5 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".md5");
 
             oldMd5.delete();
 
-            File newMd5 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".md5" );
+            File newMd5 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".md5");
 
-            FileUtils.fileWrite( newMd5.getAbsolutePath(), checksum( existingMetadata, MD5 ) );
+            FileUtils.fileWrite(newMd5.getAbsolutePath(), checksum(existingMetadata, MD5));
 
-            File oldSha1 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1" );
+            File oldSha1 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1");
 
             oldSha1.delete();
 
-            File newSha1 = new File( existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1" );
+            File newSha1 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1");
 
-            FileUtils.fileWrite( newSha1.getAbsolutePath(), checksum( existingMetadata, SHA1 ) );
+            FileUtils.fileWrite(newSha1.getAbsolutePath(), checksum(existingMetadata, SHA1));
 
-        }
-        catch ( NoSuchAlgorithmException e )
-        {
-            throw new RuntimeException( e );
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
 
         // We have the new merged copy so we're good
@@ -337,48 +325,38 @@ public class DefaultRepositoryCopier
         existingMetadata.renameTo(stagedMetadataFile);
     }
 
-    private String checksum( File file,
-                             String type )
-        throws IOException, NoSuchAlgorithmException
-    {
-        MessageDigest md5 = MessageDigest.getInstance( type );
+    private String checksum(File file, String type) throws IOException, NoSuchAlgorithmException {
+        MessageDigest md5 = MessageDigest.getInstance(type);
 
-        InputStream is = new FileInputStream( file );
+        InputStream is = new FileInputStream(file);
 
         byte[] buf = new byte[8192];
 
         int i;
 
-        while ( ( i = is.read( buf ) ) > 0 )
-        {
-            md5.update( buf, 0, i );
+        while ((i = is.read(buf)) > 0) {
+            md5.update(buf, 0, i);
         }
 
-        IOUtil.close( is );
+        IOUtil.close(is);
 
-        return encode( md5.digest() );
+        return encode(md5.digest());
     }
 
-    protected String encode( byte[] binaryData )
-    {
-        if ( binaryData.length != 16 && binaryData.length != 20 )
-        {
+    protected String encode(byte[] binaryData) {
+        if (binaryData.length != 16 && binaryData.length != 20) {
             int bitLength = binaryData.length * 8;
-            throw new IllegalArgumentException( "Unrecognised length for binary data: " + bitLength + " bits" );
+            throw new IllegalArgumentException("Unrecognised length for binary data: " + bitLength + " bits");
         }
 
         String retValue = "";
 
-        for ( int i = 0; i < binaryData.length; i++ )
-        {
-            String t = Integer.toHexString( binaryData[i] & 0xff );
+        for (int i = 0; i < binaryData.length; i++) {
+            String t = Integer.toHexString(binaryData[i] & 0xff);
 
-            if ( t.length() == 1 )
-            {
-                retValue += ( "0" + t );
-            }
-            else
-            {
+            if (t.length() == 1) {
+                retValue += ("0" + t);
+            } else {
                 retValue += t;
             }
         }
@@ -386,49 +364,34 @@ public class DefaultRepositoryCopier
         return retValue.trim();
     }
 
-    private void scan( Wagon wagon,
-                       String basePath,
-                       List<String> collected )
-    {
-        try
-        {
-            if ( basePath.indexOf( ".svn" ) >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index") ) {
+    private void scan(Wagon wagon, String basePath, List<String> collected) {
+        try {
+            if (basePath.indexOf(".svn") >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index")) {
             } else {
                 @SuppressWarnings("unchecked")
-                List<String> files = wagon.getFileList( basePath );
+                List<String> files = wagon.getFileList(basePath);
 
-                if ( files.isEmpty() )
-                {
-                    collected.add( basePath );
-                }
-                else
-                {
-                    for ( String file : files )
-                    {
-                        logger.debug( "Found file in the source repository: " + file );
-                        scan( wagon, basePath + file, collected );
+                if (files.isEmpty()) {
+                    collected.add(basePath);
+                } else {
+                    for (String file : files) {
+                        logger.debug("Found file in the source repository: " + file);
+                        scan(wagon, basePath + file, collected);
                     }
                 }
             }
-        }
-        catch ( TransferFailedException e )
-        {
-            throw new RuntimeException( e );
-        }
-        catch ( ResourceDoesNotExistException e )
-        {
+        } catch (TransferFailedException e) {
+            throw new RuntimeException(e);
+        } catch (ResourceDoesNotExistException e) {
             // is thrown when calling getFileList on a file
-            collected.add( basePath );
-        }
-        catch ( AuthorizationException e )
-        {
-            throw new RuntimeException( e );
+            collected.add(basePath);
+        } catch (AuthorizationException e) {
+            throw new RuntimeException(e);
         }
 
     }
 
-    public void enableLogging( Logger logger )
-    {
+    public void enableLogging(Logger logger) {
         this.logger = logger;
     }
 }

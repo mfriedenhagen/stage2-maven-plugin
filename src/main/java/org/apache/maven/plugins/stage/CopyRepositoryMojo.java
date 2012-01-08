@@ -34,12 +34,10 @@ import org.apache.maven.wagon.repository.Repository;
  * @requiresProject false
  * @goal copy
  */
-public class CopyRepositoryMojo
-    extends AbstractMojo
-{
+public class CopyRepositoryMojo extends AbstractMojo {
     /**
      * The URL to the source repository.
-     *
+     * 
      * @parameter expression="${source}"
      */
     private String source;
@@ -48,8 +46,7 @@ public class CopyRepositoryMojo
      * The URL to the target repository.
      * 
      * <p>
-     * <strong>Note:</strong> currently only <code>scp:</code> URLs are allowed
-     * as a target URL.
+     * <strong>Note:</strong> currently only <code>scp:</code> URLs are allowed as a target URL.
      * </p>
      * 
      * @parameter expression="${target}"
@@ -71,13 +68,12 @@ public class CopyRepositoryMojo
     private String targetRepositoryId;
 
     /**
-     * The GAV coordinates of the artifact that is to be copied. This is a comma separated
-     * list of coordinates like 
+     * The GAV coordinates of the artifact that is to be copied. This is a comma separated list of coordinates like
      * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
      * <p>
      * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
      * </p>
-     *
+     * 
      * @parameter expression="${gavs}"
      * @required
      */
@@ -85,34 +81,24 @@ public class CopyRepositoryMojo
 
     /**
      * The repository copier to use.
-     *
+     * 
      * @component
      */
     private RepositoryCopier copier;
 
-    public void execute()
-        throws MojoExecutionException
-    {
-        try
-        {
+    public void execute() throws MojoExecutionException {
+        try {
             if (gavs.length == 0) {
                 throw new MojoExecutionException("Need to have gavs");
             }
             getLog().info("gavs=" + Arrays.toString(gavs));
-            Repository sourceRepository = new Repository( sourceRepositoryId, source );
-            Repository targetRepository = new Repository( targetRepositoryId, target );
-            copier.copy( sourceRepository, targetRepository, gavs );
-        }
-        catch ( IOException e )
-        {
-            throw new MojoExecutionException(
-                "Error copying repository from " + source + " to " + target, e );
-        }
-        catch ( WagonException e )
-        {
-            throw new MojoExecutionException(
-                "Error copying repository from " + source + " to " + target, e );
+            Repository sourceRepository = new Repository(sourceRepositoryId, source);
+            Repository targetRepository = new Repository(targetRepositoryId, target);
+            copier.copy(sourceRepository, targetRepository, gavs);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error copying repository from " + source + " to " + target, e);
+        } catch (WagonException e) {
+            throw new MojoExecutionException("Error copying repository from " + source + " to " + target, e);
         }
     }
 }
-
