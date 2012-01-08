@@ -151,9 +151,9 @@ public class DefaultRepositoryCopier
         // Need to sort the files, otherwise the sha1 or md5 might be uploaded before the concrete files,
         // which will result in an error.
         Collections.sort(files);
-        logger.info("Files to upload found in staging repository" + files);
+        logger.info("Found " +  files.size() +  " matching files: " + files );
 
-        logger.info( "Downloading files from the source repository to: " + basedir );
+        logger.info( "Downloading files from the source repository to " + basedir );
 
         for ( String s : files )
         {
@@ -165,6 +165,8 @@ public class DefaultRepositoryCopier
 
             sourceWagon.get( s, f );
         }
+
+        logger.info( "Downloaded "  + files.size() + "  files from the source repository to " + basedir );
 
         // ----------------------------------------------------------------------------
         // Now all the files are present locally and now we are going to grab the
