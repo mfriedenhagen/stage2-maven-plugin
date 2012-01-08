@@ -429,35 +429,6 @@ public class DefaultRepositoryCopier
 
     }
 
-    protected List scanForArtifactPaths( ArtifactRepository repository )
-    {
-        List collected;
-        try
-        {
-            Wagon wagon = wagonManager.getWagon( repository.getProtocol() );
-            Repository artifactRepository = new Repository( repository.getId(), repository.getUrl() );
-            wagon.connect( artifactRepository );
-            collected = new ArrayList();
-            scan( wagon, "/", collected );
-            wagon.disconnect();
-
-            return collected;
-
-        }
-        catch ( UnsupportedProtocolException e )
-        {
-            throw new RuntimeException( e );
-        }
-        catch ( ConnectionException e )
-        {
-            throw new RuntimeException( e );
-        }
-        catch ( AuthenticationException e )
-        {
-            throw new RuntimeException( e );
-        }
-    }
-
     public void enableLogging( Logger logger )
     {
         this.logger = logger;
