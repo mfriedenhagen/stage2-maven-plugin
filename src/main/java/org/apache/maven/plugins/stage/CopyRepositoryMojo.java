@@ -19,13 +19,13 @@ package org.apache.maven.plugins.stage;
  * under the License.
  */
 
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.repository.Repository;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Copies artifacts from one repository to another repository.

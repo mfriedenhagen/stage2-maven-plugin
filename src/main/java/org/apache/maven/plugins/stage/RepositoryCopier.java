@@ -19,10 +19,10 @@ package org.apache.maven.plugins.stage;
  * under the License.
  */
 
+import java.io.IOException;
+
 import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.repository.Repository;
-
-import java.io.IOException;
 
 /**
  * @author Jason van Zyl

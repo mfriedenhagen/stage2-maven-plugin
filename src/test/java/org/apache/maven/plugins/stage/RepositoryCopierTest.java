@@ -1,17 +1,16 @@
 package org.apache.maven.plugins.stage;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.Reader;
+import java.util.List;
+
+import org.apache.maven.artifact.repository.metadata.Metadata;
+import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
+import org.apache.maven.wagon.repository.Repository;
 import org.codehaus.plexus.PlexusTestCase;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
-import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
-import org.apache.maven.artifact.repository.metadata.Metadata;
-import org.apache.maven.wagon.repository.Repository;
-
-import java.io.File;
-import java.io.Reader;
-import java.io.FileReader;
-import java.util.Arrays;
-import java.util.List;
 
 /** @author Jason van Zyl */
 public class RepositoryCopierTest
