@@ -70,7 +70,8 @@ public class DefaultRepositoryCopier
         final String groupId;
         final String artifactId;
         final String version;
-        final Pattern pattern;
+        final Pattern patternFiles;
+        final Pattern patternMeta;
 
         Gav(String groupId, String artifactId, String version) {
             this.groupId = StringUtils.join(StringUtils.split(groupId, "."), "/");
@@ -78,14 +79,16 @@ public class DefaultRepositoryCopier
             this.version = version;
             final String escapedVersion = StringUtils.replace(version, ".", "\\.");
             if (artifactId.equals("*")) {
-                pattern = Pattern.compile(StringUtils.join(new String[]{this.groupId, ".*", escapedVersion}, "/"));
+                patternFiles = Pattern.compile(StringUtils.join(new String[]{this.groupId, ".*", escapedVersion}, "/"));
+                patternMeta = Pattern.compile(StringUtils.join(new String[]{this.groupId, ".*", MAVEN_METADATA}, "/"));
             } else {
-                pattern = Pattern.compile(StringUtils.join(new String[]{this.groupId, this.artifactId, escapedVersion}, "/"));
+                patternFiles = Pattern.compile(StringUtils.join(new String[]{this.groupId, this.artifactId, escapedVersion}, "/"));
+                patternMeta = Pattern.compile(StringUtils.join(new String[]{this.groupId, this.artifactId, MAVEN_METADATA}, "/"));
             }
         }
 
         public boolean matches(String file) {
-            return pattern.matcher(file).find();
+            return patternFiles.matcher(file).find() || patternMeta.matcher(file).find();
         }
 
     }
