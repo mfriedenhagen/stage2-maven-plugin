@@ -91,7 +91,15 @@ public class DefaultRepositoryCopier
             return patternFiles.matcher(file).find() || patternMeta.matcher(file).find();
         }
 
+        public static Gav valueOf(String version) {
+            String[] gavComponents = StringUtils.split(version, ":");
+            if ( gavComponents.length!=3 ) {
+                throw new IllegalArgumentException("version must have groupId:artifactId:version, where artifactId may be *");
+            }
+            return new Gav(gavComponents[0], gavComponents[1], gavComponents[2]);
+        }
     }
+
     private MetadataXpp3Reader reader = new MetadataXpp3Reader();
 
     private MetadataXpp3Writer writer = new MetadataXpp3Writer();
@@ -104,12 +112,7 @@ public class DefaultRepositoryCopier
     public void copy( Repository sourceRepository, Repository targetRepository, String version )
         throws WagonException, IOException
     {
-        String[] gavComponents = StringUtils.split(version, ":");
-        if ( gavComponents.length!=3 ) {
-            throw new IllegalArgumentException("version must have groupId:artifactId:version, where artifactId may be *");
-        }
-
-        Gav gav = new Gav(gavComponents[0], gavComponents[1], gavComponents[2]);
+        final Gav gav = Gav.valueOf(version);
 
         String prefix = "staging-plugin";
 
