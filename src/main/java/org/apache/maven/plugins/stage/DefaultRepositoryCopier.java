@@ -265,82 +265,58 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
         }
     }
 
-    private void mergeMetadata(File existingMetadata) throws IOException, XmlPullParserException {
-        // Existing Metadata in target stage
-
-        Reader existingMetadataReader = new FileReader(existingMetadata);
-
-        Metadata existing = reader.read(existingMetadataReader);
-
-        // Staged Metadata
-
-        File stagedMetadataFile = new File(existingMetadata.getParentFile(), MAVEN_METADATA);
-
-        Reader stagedMetadataReader = new FileReader(stagedMetadataFile);
-
-        Metadata staged = reader.read(stagedMetadataReader);
-
-        // Merge
-
-        existing.merge(staged);
-
-        Writer writer = new FileWriter(existingMetadata);
-
-        this.writer.write(writer, existing);
-
-        IOUtil.close(writer);
-
-        IOUtil.close(stagedMetadataReader);
-
-        IOUtil.close(existingMetadataReader);
-
-        // Mark all metadata as in-process and regenerate the checksums as they will be different
-        // after the merger
-
+    private Metadata readFromFile(File metadataFile) throws IOException, XmlPullParserException {
+        final Reader fileReader = new FileReader(metadataFile);
         try {
-            File oldMd5 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".md5");
+            return reader.read(fileReader);
+        } finally {
+            fileReader.close();
+        }
+    }
 
-            oldMd5.delete();
-
-            File newMd5 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".md5");
-
-            FileUtils.fileWrite(newMd5.getAbsolutePath(), checksum(existingMetadata, MD5));
-
-            File oldSha1 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1");
-
-            oldSha1.delete();
-
-            File newSha1 = new File(existingMetadata.getParentFile(), MAVEN_METADATA + ".sha1");
-
-            FileUtils.fileWrite(newSha1.getAbsolutePath(), checksum(existingMetadata, SHA1));
-
+    private void mergeMetadata(File existingMetadataFile) throws IOException, XmlPullParserException {
+        // Existing Metadata in target stage
+        final File stagedMetadataFile = new File(existingMetadataFile.getParentFile(), MAVEN_METADATA);
+        Metadata existingMetadata = readFromFile(existingMetadataFile);
+        Metadata stagedMetadata = readFromFile(stagedMetadataFile);
+        existingMetadata.merge(stagedMetadata);
+        stagedMetadataFile.delete();
+        // Write back the merged data to the staged file.
+        final Writer stagedMetadataFileWriter = new FileWriter(stagedMetadataFile);
+        try {
+            writer.write(stagedMetadataFileWriter, existingMetadata);
+        } finally {
+            stagedMetadataFileWriter.close();
+        }
+        // Regenerate the checksums as they will be different after the merger
+        try {
+            File md5 = new File(stagedMetadataFile.getParentFile(), MAVEN_METADATA + ".md5");
+            FileUtils.fileWrite(md5.getAbsolutePath(), checksum(stagedMetadataFile, MD5));
+            File sha1 = new File(stagedMetadataFile.getParentFile(), MAVEN_METADATA + ".sha1");
+            FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(stagedMetadataFile, SHA1));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
 
-        // We have the new merged copy so we're good
-
-        stagedMetadataFile.delete();
-
-        existingMetadata.renameTo(stagedMetadataFile);
     }
 
     private String checksum(File file, String type) throws IOException, NoSuchAlgorithmException {
-        MessageDigest md5 = MessageDigest.getInstance(type);
+        final MessageDigest digest = MessageDigest.getInstance(type);
 
-        InputStream is = new FileInputStream(file);
+        final InputStream is = new FileInputStream(file);
 
-        byte[] buf = new byte[8192];
+        final byte[] buf = new byte[8192];
 
         int i;
-
-        while ((i = is.read(buf)) > 0) {
-            md5.update(buf, 0, i);
+        try {
+            while ((i = is.read(buf)) > 0) {
+                digest.update(buf, 0, i);
+            }
+        } finally {
+            is.close();
         }
 
-        IOUtil.close(is);
-
-        return encode(md5.digest());
+        return encode(digest.digest());
     }
 
     protected String encode(byte[] binaryData) {
