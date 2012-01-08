@@ -74,17 +74,45 @@ public class DefaultRepositoryCopier
         final Pattern patternMeta;
 
         Gav(String groupId, String artifactId, String version) {
-            this.groupId = StringUtils.join(StringUtils.split(groupId, "."), "/");
+            this.groupId = toPath(StringUtils.split(groupId, "."));
             this.artifactId = artifactId;
             this.version = version;
-            final String escapedVersion = StringUtils.replace(version, ".", "\\.");
+            final String escapedVersion = escape(version);
             if (artifactId.equals("*")) {
-                patternFiles = Pattern.compile(StringUtils.join(new String[]{this.groupId, ".*", escapedVersion}, "/"));
-                patternMeta = Pattern.compile(StringUtils.join(new String[]{this.groupId, ".*", MAVEN_METADATA}, "/"));
+                patternFiles = compile(this.groupId, ".*", escapedVersion);
+                patternMeta = compile(this.groupId, ".*", MAVEN_METADATA);
             } else {
-                patternFiles = Pattern.compile(StringUtils.join(new String[]{this.groupId, this.artifactId, escapedVersion}, "/"));
-                patternMeta = Pattern.compile(StringUtils.join(new String[]{this.groupId, this.artifactId, MAVEN_METADATA}, "/"));
+                patternFiles = compile(this.groupId, this.artifactId, escapedVersion);
+                patternMeta = compile(this.groupId, this.artifactId, MAVEN_METADATA);
             }
+        }
+
+        /**
+         * Compiles a pattern from the splitted string combined with '/'.
+         *
+         * @param split
+         * @return
+         */
+        private Pattern compile(final String...split) {
+            return Pattern.compile(toPath(split));
+        }
+
+        /**
+         * @param split
+         * @return
+         */
+        private String toPath(final String... split) {
+            return StringUtils.join(split, "/");
+        }
+
+        /**
+         * Escape regex patterns in the string.
+         *
+         * @param version
+         * @return
+         */
+        private String escape(String version) {
+            return Pattern.quote(version);
         }
 
         public boolean matches(String file) {
@@ -142,7 +170,7 @@ public class DefaultRepositoryCopier
 
         logger.debug("all files found in staging repository" + rawFiles);
 
-        logger.info( "Scanned source repository for all files, found" +  rawFiles.size() + " files.");
+        logger.info( "Scanned source repository for all files, found " +  rawFiles.size() + " files.");
 
         List<String> files = new ArrayList<String>();
         for (String file : rawFiles) {
