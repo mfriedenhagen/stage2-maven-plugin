@@ -25,6 +25,7 @@ import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.repository.Repository;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Copies artifacts from one repository to another repository.
@@ -70,15 +71,17 @@ public class CopyRepositoryMojo
     private String targetRepositoryId;
 
     /**
-     * The GAV coordinates of the artifact that is to be copied.
+     * The GAV coordinates of the artifact that is to be copied. This is a comma separated
+     * list of coordinates like 
+     * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
      * <p>
      * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
      * </p>
      *
-     * @parameter expression="${version}"
+     * @parameter expression="${gavs}"
      * @required
      */
-    private String version;
+    private String[] gavs;
 
     /**
      * The repository copier to use.
@@ -92,9 +95,13 @@ public class CopyRepositoryMojo
     {
         try
         {
+            if (gavs.length == 0) {
+                throw new MojoExecutionException("Need to have gavs");
+            }
+            getLog().info("gavs=" + Arrays.toString(gavs));
             Repository sourceRepository = new Repository( sourceRepositoryId, source );
             Repository targetRepository = new Repository( targetRepositoryId, target );
-            copier.copy( sourceRepository, targetRepository, version );
+            copier.copy( sourceRepository, targetRepository, gavs );
         }
         catch ( IOException e )
         {

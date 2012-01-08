@@ -39,6 +39,6 @@ public interface RepositoryCopier
 
     String MAVEN_METADATA = "maven-metadata.xml";
 
-    void copy( Repository sourceRepository, Repository targetRepository, String version )
+    void copy( Repository sourceRepository, Repository targetRepository, String[] gavStrings )
         throws WagonException, IOException;
 }

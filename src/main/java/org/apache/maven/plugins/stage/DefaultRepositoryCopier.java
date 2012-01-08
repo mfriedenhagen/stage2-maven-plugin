@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.maven.artifact.manager.WagonConfigurationException;
 import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.metadata.Metadata;
@@ -137,20 +138,39 @@ public class DefaultRepositoryCopier
 
     private Logger logger;
 
-    public void copy( Repository sourceRepository, Repository targetRepository, String version )
+    public void copy( Repository sourceRepository, Repository targetRepository, String[] gavStrings )
         throws WagonException, IOException
     {
-        final Gav gav = Gav.valueOf(version);
+        for (String gavString : gavStrings) {
+            final Gav gav = Gav.valueOf(gavString);
+            copy(sourceRepository, targetRepository, gav);
+        }
 
+    }
+
+    /**
+     * @param sourceRepository
+     * @param targetRepository
+     * @param gav
+     * @throws IOException
+     * @throws UnsupportedProtocolException
+     * @throws WagonConfigurationException
+     * @throws ConnectionException
+     * @throws AuthenticationException
+     * @throws TransferFailedException
+     * @throws ResourceDoesNotExistException
+     * @throws AuthorizationException
+     */
+    void copy(Repository sourceRepository, Repository targetRepository, final Gav gav) throws IOException,
+            UnsupportedProtocolException, WagonConfigurationException, ConnectionException, AuthenticationException,
+            TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
         String prefix = "staging-plugin";
-
-        String tempdir = System.getProperty( "java.io.tmpdir" );
-
-        logger.info( "Writing all output to " + tempdir );
 
         // Work directory
 
-        File basedir = new File( tempdir, prefix + "-" + gav.version );
+        File basedir = new File( System.getProperty( "java.io.tmpdir" ), prefix + "-" + gav.version );
+
+        logger.info( "Writing all output to " + basedir );
 
         FileUtils.deleteDirectory( basedir );
 
@@ -253,7 +273,6 @@ public class DefaultRepositoryCopier
             logger.info("Deploy " + targetRepositoryUri.resolve(s));
             targetWagon.put(new File(basedir, s), s);
         }
-
     }
 
     private void mergeMetadata( File existingMetadata )
