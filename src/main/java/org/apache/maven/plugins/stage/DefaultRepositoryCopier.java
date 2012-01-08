@@ -131,7 +131,7 @@ public class DefaultRepositoryCopier
 
         sourceWagon.connect( sourceRepository, sourceAuth );
 
-        logger.info( "Looking for files in the source repository." );
+        logger.info( "Scanning source repository for all files." );
 
         List<String> rawFiles = new ArrayList<String>();
 
@@ -139,7 +139,9 @@ public class DefaultRepositoryCopier
 
         logger.debug("all files found in staging repository" + rawFiles);
 
-        List<String> files = new ArrayList();
+        logger.info( "Scanned source repository for all files, found" +  rawFiles.size() + " files.");
+
+        List<String> files = new ArrayList<String>();
         for (String file : rawFiles) {
             if (gav.matches(file)) {
                 files.add(file);
@@ -153,10 +155,8 @@ public class DefaultRepositoryCopier
 
         logger.info( "Downloading files from the source repository to: " + basedir );
 
-        for ( Iterator i = files.iterator(); i.hasNext(); )
+        for ( String s : files )
         {
-            String s = (String) i.next();
-
             File f = new File( basedir, s );
 
             FileUtils.mkdir( f.getParentFile().getAbsolutePath() );
