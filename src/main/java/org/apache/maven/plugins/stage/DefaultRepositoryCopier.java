@@ -145,7 +145,6 @@ public class DefaultRepositoryCopier
             final Gav gav = Gav.valueOf(gavString);
             copy(sourceRepository, targetRepository, gav);
         }
-
     }
 
     /**
@@ -391,13 +390,14 @@ public class DefaultRepositoryCopier
 
     private void scan( Wagon wagon,
                        String basePath,
-                       List collected )
+                       List<String> collected )
     {
         try
         {
             if ( basePath.indexOf( ".svn" ) >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index") ) {
             } else {
-                List files = wagon.getFileList( basePath );
+                @SuppressWarnings("unchecked")
+                List<String> files = wagon.getFileList( basePath );
 
                 if ( files.isEmpty() )
                 {
@@ -405,9 +405,8 @@ public class DefaultRepositoryCopier
                 }
                 else
                 {
-                    for ( Iterator iterator = files.iterator(); iterator.hasNext(); )
+                    for ( String file : files )
                     {
-                        String file = (String) iterator.next();
                         logger.debug( "Found file in the source repository: " + file );
                         scan( wagon, basePath + file, collected );
                     }
