@@ -53,7 +53,6 @@ import org.apache.maven.wagon.repository.Repository;
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
@@ -163,23 +162,125 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
     void copy(Repository sourceRepository, Repository targetRepository, final Gav gav) throws IOException,
             UnsupportedProtocolException, WagonConfigurationException, ConnectionException, AuthenticationException,
             TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
-        String prefix = "staging-plugin";
-
         // Work directory
+        String prefix = "staging-plugin";
 
         File basedir = new File(System.getProperty("java.io.tmpdir"), prefix + "-" + gav.version);
 
-        logger.info("Writing all output to " + basedir);
+        deleteAndCreateTempDir(basedir);
 
-        FileUtils.deleteDirectory(basedir);
+        List<String> files = collectAndDownloadFiles(sourceRepository, basedir, gav);
 
-        basedir.mkdirs();
+        Wagon targetWagon = createTargetWagon(targetRepository);
 
-        Wagon sourceWagon = wagonManager.getWagon(sourceRepository);
+        final String targetRepositoryUrl = targetRepository.getUrl();
+        final URI targetRepositoryUri = downloadAndMergeMetadata(files, basedir, targetWagon, targetRepositoryUrl);
+        uploadArtifacts(files, basedir, targetWagon, targetRepositoryUri);
+    }
 
-        AuthenticationInfo sourceAuth = wagonManager.getAuthenticationInfo(sourceRepository.getId());
+    /**
+     * @param targetRepository
+     * @return
+     * @throws UnsupportedProtocolException
+     * @throws WagonConfigurationException
+     * @throws ConnectionException
+     * @throws AuthenticationException
+     */
+    Wagon createTargetWagon(Repository targetRepository) throws UnsupportedProtocolException,
+            WagonConfigurationException, ConnectionException, AuthenticationException {
+        Wagon targetWagon = wagonManager.getWagon(targetRepository);
 
-        sourceWagon.connect(sourceRepository, sourceAuth);
+        AuthenticationInfo targetAuth = wagonManager.getAuthenticationInfo(targetRepository.getId());
+
+        targetWagon.connect(targetRepository, targetAuth);
+        return targetWagon;
+    }
+
+    /**
+     * Now all the files are present locally and now we are going to grab the metadata files from the
+     * targetRepositoryUrl and pull those down locally so that we can merge the metadata.
+     *
+     * @param files
+     * @param basedir
+     * @param targetWagon
+     * @param targetRepositoryUrl
+     * @return
+     * @throws TransferFailedException
+     * @throws AuthorizationException
+     * @throws IOException
+     */
+    URI downloadAndMergeMetadata(List<String> files, File basedir, Wagon targetWagon, final String targetRepositoryUrl)
+            throws TransferFailedException, AuthorizationException, IOException {
+        logger.info("Downloading metadata from the target repository.");
+
+        final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl
+                : targetRepositoryUrl + "/");
+
+        for (String file : files) {
+
+            if (file.startsWith("/")) {
+                file = file.substring(1);
+            }
+
+            if (file.endsWith(MAVEN_METADATA)) {
+                File emf = new File(basedir, file + IN_PROCESS_MARKER);
+
+                try {
+                    targetWagon.get(file, emf);
+                } catch (ResourceDoesNotExistException e) {
+                    // We don't have an equivalent on the targetRepositoryUrl side because we have something
+                    // new on the sourceRepositoryUrl side so just skip the metadata merging.
+
+                    continue;
+                }
+
+                try {
+                    mergeMetadata(emf);
+                } catch (XmlPullParserException e) {
+                    throw new IOException("Metadata file is corrupt " + file + " Reason: " + e.getMessage());
+                }
+            }
+
+        }
+        return targetRepositoryUri;
+    }
+
+    /**
+     * @param files
+     * @param basedir
+     * @param targetWagon
+     * @param targetRepositoryUri
+     * @throws TransferFailedException
+     * @throws ResourceDoesNotExistException
+     * @throws AuthorizationException
+     */
+    void uploadArtifacts(List<String> files, File basedir, Wagon targetWagon, final URI targetRepositoryUri)
+            throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+        for (String file : files) {
+            logger.info("Uploaded: " + targetRepositoryUri.resolve(file));
+            targetWagon.put(new File(basedir, file), file);
+        }
+    }
+
+    /**
+     * @param sourceRepository
+     * @param basedir
+     * @param gav
+     * @return
+     * @throws UnsupportedProtocolException
+     * @throws WagonConfigurationException
+     * @throws ConnectionException
+     * @throws AuthenticationException
+     * @throws TransferFailedException
+     * @throws ResourceDoesNotExistException
+     * @throws AuthorizationException
+     */
+    List<String> collectAndDownloadFiles(Repository sourceRepository, File basedir, final Gav gav)
+            throws UnsupportedProtocolException, WagonConfigurationException, ConnectionException,
+            AuthenticationException, TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+        List<String> files = new ArrayList<String>();
+
+        Wagon sourceWagon = createTargetWagon(sourceRepository);
 
         logger.info("Scanning source repository for all files.");
 
@@ -191,7 +292,6 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
         logger.info("Scanned source repository for all files, found " + rawFiles.size() + " files.");
 
-        List<String> files = new ArrayList<String>();
         for (String file : rawFiles) {
             if (gav.matches(file)) {
                 files.add(file);
@@ -216,53 +316,19 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
         }
 
         logger.info("Downloaded " + files.size() + "  files from the source repository to " + basedir);
+        return files;
+    }
 
-        // ----------------------------------------------------------------------------
-        // Now all the files are present locally and now we are going to grab the
-        // metadata files from the targetRepositoryUrl and pull those down locally
-        // so that we can merge the metadata.
-        // ----------------------------------------------------------------------------
+    /**
+     * @param basedir
+     * @throws IOException
+     */
+    void deleteAndCreateTempDir(File basedir) throws IOException {
+        logger.info("Writing all output to " + basedir);
 
-        logger.info("Downloading metadata from the target repository.");
+        FileUtils.deleteDirectory(basedir);
 
-        Wagon targetWagon = wagonManager.getWagon(targetRepository);
-
-        AuthenticationInfo targetAuth = wagonManager.getAuthenticationInfo(targetRepository.getId());
-
-        targetWagon.connect(targetRepository, targetAuth);
-
-        final String targetRepositoryUrl = targetRepository.getUrl();
-        final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl
-                : targetRepositoryUrl + "/");
-
-        for (String s : files) {
-
-            if (s.startsWith("/")) {
-                s = s.substring(1);
-            }
-
-            if (s.endsWith(MAVEN_METADATA)) {
-                File emf = new File(basedir, s + IN_PROCESS_MARKER);
-
-                try {
-                    targetWagon.get(s, emf);
-                } catch (ResourceDoesNotExistException e) {
-                    // We don't have an equivalent on the targetRepositoryUrl side because we have something
-                    // new on the sourceRepositoryUrl side so just skip the metadata merging.
-
-                    continue;
-                }
-
-                try {
-                    mergeMetadata(emf);
-                } catch (XmlPullParserException e) {
-                    throw new IOException("Metadata file is corrupt " + s + " Reason: " + e.getMessage());
-                }
-            }
-
-            logger.info("Deploy " + targetRepositoryUri.resolve(s));
-            targetWagon.put(new File(basedir, s), s);
-        }
+        basedir.mkdirs();
     }
 
     private Metadata readFromFile(File metadataFile) throws IOException, XmlPullParserException {
