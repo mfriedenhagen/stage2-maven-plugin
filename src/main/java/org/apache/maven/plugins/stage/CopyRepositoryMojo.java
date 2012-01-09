@@ -45,10 +45,6 @@ public class CopyRepositoryMojo extends AbstractMojo {
     /**
      * The URL to the target repository.
      * 
-     * <p>
-     * <strong>Note:</strong> currently only <code>scp:</code> URLs are allowed as a target URL.
-     * </p>
-     * 
      * @parameter expression="${target}"
      */
     private String target;
@@ -88,17 +84,52 @@ public class CopyRepositoryMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         try {
-            if (gavs.length == 0) {
+            if (getGavs().length == 0) {
                 throw new MojoExecutionException("Need to have gavs");
             }
-            getLog().info("gavs=" + Arrays.toString(gavs));
-            Repository sourceRepository = new Repository(sourceRepositoryId, source);
-            Repository targetRepository = new Repository(targetRepositoryId, target);
-            copier.copy(sourceRepository, targetRepository, gavs);
+            getLog().info("gavs=" + Arrays.toString(getGavs()));
+            Repository sourceRepository = new Repository(getSourceRepositoryId(), getSource());
+            Repository targetRepository = new Repository(getTargetRepositoryId(), getTarget());
+            copier.copy(sourceRepository, targetRepository, getGavs());
         } catch (IOException e) {
-            throw new MojoExecutionException("Error copying repository from " + source + " to " + target, e);
+            throw new MojoExecutionException("Error copying repository from " + getSource() + " to " + getTarget(), e);
         } catch (WagonException e) {
-            throw new MojoExecutionException("Error copying repository from " + source + " to " + target, e);
+            throw new MojoExecutionException("Error copying repository from " + getSource() + " to " + getTarget(), e);
         }
+    }
+
+    /**
+     * @return the source repository url.
+     */
+    String getSource() {
+        return source;
+    }
+
+    /**
+     * @return the target repository url.
+     */
+    String getTarget() {
+        return target;
+    }
+
+    /**
+     * @return the sourceRepositoryId
+     */
+    String getSourceRepositoryId() {
+        return sourceRepositoryId;
+    }
+
+    /**
+     * @return the targetRepositoryId
+     */
+    String getTargetRepositoryId() {
+        return targetRepositoryId;
+    }
+
+    /**
+     * @return the gavs given on the command line.
+     */
+    String[] getGavs() {
+        return gavs;
     }
 }
