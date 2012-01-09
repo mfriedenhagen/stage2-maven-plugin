@@ -20,16 +20,8 @@ package org.apache.maven.plugins.stage;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.Writer;
 import java.net.URI;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,9 +29,6 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.manager.WagonConfigurationException;
 import org.apache.maven.artifact.manager.WagonManager;
-import org.apache.maven.artifact.repository.metadata.Metadata;
-import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
-import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Writer;
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
@@ -54,7 +43,6 @@ import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
  * @author Jason van Zyl
@@ -128,10 +116,6 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
             return new Gav(gavComponents[0], gavComponents[1], gavComponents[2]);
         }
     }
-
-    private MetadataXpp3Reader reader = new MetadataXpp3Reader();
-
-    private MetadataXpp3Writer writer = new MetadataXpp3Writer();
 
     /** @plexus.requirement */
     private WagonManager wagonManager;
@@ -233,12 +217,8 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
                     continue;
                 }
-
-                try {
-                    mergeMetadata(emf);
-                } catch (XmlPullParserException e) {
-                    throw new IOException("Metadata file is corrupt " + file + " Reason: " + e.getMessage());
-                }
+                final MetadataMerger metadataMerger = new MetadataMerger(emf);
+                metadataMerger.mergeMetadata();
             }
 
         }
@@ -331,80 +311,6 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
         basedir.mkdirs();
     }
 
-    private Metadata readFromFile(File metadataFile) throws IOException, XmlPullParserException {
-        final Reader fileReader = new FileReader(metadataFile);
-        try {
-            return reader.read(fileReader);
-        } finally {
-            fileReader.close();
-        }
-    }
-
-    private void mergeMetadata(File existingMetadataFile) throws IOException, XmlPullParserException {
-        // Existing Metadata in target stage
-        final File stagedMetadataFile = new File(existingMetadataFile.getParentFile(), MAVEN_METADATA);
-        Metadata existingMetadata = readFromFile(existingMetadataFile);
-        Metadata stagedMetadata = readFromFile(stagedMetadataFile);
-        existingMetadata.merge(stagedMetadata);
-        stagedMetadataFile.delete();
-        // Write back the merged data to the staged file.
-        final Writer stagedMetadataFileWriter = new FileWriter(stagedMetadataFile);
-        try {
-            writer.write(stagedMetadataFileWriter, existingMetadata);
-        } finally {
-            stagedMetadataFileWriter.close();
-        }
-        // Regenerate the checksums as they will be different after the merger
-        try {
-            File md5 = new File(stagedMetadataFile.getParentFile(), MAVEN_METADATA + ".md5");
-            FileUtils.fileWrite(md5.getAbsolutePath(), checksum(stagedMetadataFile, MD5));
-            File sha1 = new File(stagedMetadataFile.getParentFile(), MAVEN_METADATA + ".sha1");
-            FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(stagedMetadataFile, SHA1));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    private String checksum(File file, String type) throws IOException, NoSuchAlgorithmException {
-        final MessageDigest digest = MessageDigest.getInstance(type);
-
-        final InputStream is = new FileInputStream(file);
-
-        final byte[] buf = new byte[8192];
-
-        int i;
-        try {
-            while ((i = is.read(buf)) > 0) {
-                digest.update(buf, 0, i);
-            }
-        } finally {
-            is.close();
-        }
-
-        return encode(digest.digest());
-    }
-
-    protected String encode(byte[] binaryData) {
-        if (binaryData.length != 16 && binaryData.length != 20) {
-            int bitLength = binaryData.length * 8;
-            throw new IllegalArgumentException("Unrecognised length for binary data: " + bitLength + " bits");
-        }
-
-        String retValue = "";
-
-        for (int i = 0; i < binaryData.length; i++) {
-            String t = Integer.toHexString(binaryData[i] & 0xff);
-
-            if (t.length() == 1) {
-                retValue += ("0" + t);
-            } else {
-                retValue += t;
-            }
-        }
-
-        return retValue.trim();
-    }
 
     private void scan(Wagon wagon, String basePath, List<String> collected) {
         try {
