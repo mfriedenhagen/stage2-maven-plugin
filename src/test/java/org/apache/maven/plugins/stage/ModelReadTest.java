@@ -24,17 +24,71 @@ package org.apache.maven.plugins.stage;
  */
 
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.project.validation.DefaultModelValidator;
+import org.apache.maven.project.validation.ModelValidationResult;
+import org.apache.maven.project.validation.ModelValidator;
+import org.codehaus.plexus.util.ReaderFactory;
+import org.codehaus.plexus.util.xml.XmlStreamReader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @author mirko
  *
  */
+@RunWith(JUnitParamsRunner.class)
 public class ModelReadTest {
 
     @Test
-    public void test() {
-        
+    @Parameters({
+        "maven-plugin-pom.xml",
+        "jar-pom.xml",
+        "pom-pom.xml"
+        })
+    public void test(String resourcename) throws IOException, XmlPullParserException {
+        final XmlStreamReader reader = ReaderFactory.newXmlReader(ModelReadTest.class.getResourceAsStream(resourcename));
+        final Model model;
+        try {
+            model = new MavenXpp3Reader().read(reader);
+        } finally {
+            reader.close();
+        }
+        final Parent parent = model.getParent();
+        String groupId = model.getGroupId() == null ? parent.getGroupId() : model.getGroupId();
+        String artifactId = model.getArtifactId();
+        String version = model.getVersion() == null ? parent.getVersion() : model.getVersion();
+        String packaging = model.getPackaging();
+        Model newModel = generateModel(groupId, artifactId, version, packaging);
+        ModelValidator validator = new DefaultModelValidator();
+        ModelValidationResult validationResult = validator.validate(newModel);
+        assertEquals(0, validationResult.getMessageCount());
+        System.out.printf("ModelReadTest.test() %s\n", newModel.getId());
+    }
+    /**
+     * Generates a minimal model from the user-supplied artifact information.
+     * 
+     * @return The generated model, never <code>null</code>.
+     */
+    private Model generateModel(String groupId, String artifactId, String version, String packaging)
+    {
+        Model model = new Model();
+        model.setModelVersion( "4.0.0" );
+        model.setGroupId( groupId );
+        model.setArtifactId( artifactId );
+        model.setVersion( version );
+        model.setPackaging( packaging );
+        return model;
     }
 
 }
