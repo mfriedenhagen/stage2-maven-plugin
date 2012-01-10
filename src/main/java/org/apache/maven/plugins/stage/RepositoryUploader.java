@@ -25,11 +25,10 @@ import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.repository.Repository;
 
 /**
- * @author Jason van Zyl
+ * @author Mirko Friedenhagen
  */
-public interface RepositoryCopier {
-    String ROLE = RepositoryCopier.class.getName();
+public interface RepositoryUploader {
+    String ROLE = RepositoryUploader.class.getName();
 
-    void copy(Repository sourceRepository, Repository targetRepository, String[] gavStrings) throws WagonException,
-            IOException;
+    void copy(Repository targetRepository, String[] gavStrings) throws WagonException, IOException;
 }

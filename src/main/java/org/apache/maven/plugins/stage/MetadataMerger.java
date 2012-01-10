@@ -54,13 +54,13 @@ class MetadataMerger {
     /**
      * @param existingMetadataFile
      */
-    MetadataMerger(File existingMetadataFile) {
+    MetadataMerger(final File existingMetadataFile) {
         this.existingMetadataFile = existingMetadataFile;
     }
 
     void mergeMetadata() throws IOException {
         // Existing Metadata in target stage
-        final File stagedMetadataFile = new File(existingMetadataFile.getParentFile(), RepositoryCopier.MAVEN_METADATA);
+        final File stagedMetadataFile = new File(existingMetadataFile.getParentFile(), Constants.MAVEN_METADATA);
         final Metadata existingMetadata = readFromFile(existingMetadataFile);
         final Metadata stagedMetadata = readFromFile(stagedMetadataFile);
         existingMetadata.merge(stagedMetadata);
@@ -74,10 +74,10 @@ class MetadataMerger {
         }
         // Regenerate the checksums as they will be different after the merger
         try {
-            final File md5 = new File(stagedMetadataFile.getParentFile(), RepositoryCopier.MAVEN_METADATA + ".md5");
-            FileUtils.fileWrite(md5.getAbsolutePath(), checksum(stagedMetadataFile, RepositoryCopier.MD5));
-            final File sha1 = new File(stagedMetadataFile.getParentFile(), RepositoryCopier.MAVEN_METADATA + ".sha1");
-            FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(stagedMetadataFile, RepositoryCopier.SHA1));
+            final File md5 = new File(stagedMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".md5");
+            FileUtils.fileWrite(md5.getAbsolutePath(), checksum(stagedMetadataFile, Constants.MD5));
+            final File sha1 = new File(stagedMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".sha1");
+            FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(stagedMetadataFile, Constants.SHA1));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }

@@ -1,3 +1,7 @@
+/**
+ * Copyright 2012 Mirko Friedenhagen 
+ */
+
 package org.apache.maven.plugins.stage;
 
 /*
@@ -19,17 +23,18 @@ package org.apache.maven.plugins.stage;
  * under the License.
  */
 
-import java.io.IOException;
 
-import org.apache.maven.wagon.WagonException;
-import org.apache.maven.wagon.repository.Repository;
+import org.junit.Test;
 
 /**
- * @author Jason van Zyl
+ * @author mirko
+ *
  */
-public interface RepositoryCopier {
-    String ROLE = RepositoryCopier.class.getName();
+public class ModelReadTest {
 
-    void copy(Repository sourceRepository, Repository targetRepository, String[] gavStrings) throws WagonException,
-            IOException;
+    @Test
+    public void test() {
+        
+    }
+
 }

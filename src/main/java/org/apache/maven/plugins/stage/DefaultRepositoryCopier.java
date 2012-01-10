@@ -68,10 +68,10 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
             final String escapedVersion = escape(version);
             if (artifactId.equals("*")) {
                 patternFiles = compile(this.groupId, ".*", escapedVersion);
-                patternMeta = compile(this.groupId, ".*", MAVEN_METADATA);
+                patternMeta = compile(this.groupId, ".*", Constants.MAVEN_METADATA);
             } else {
                 patternFiles = compile(this.groupId, this.artifactId, escapedVersion);
-                patternMeta = compile(this.groupId, this.artifactId, MAVEN_METADATA);
+                patternMeta = compile(this.groupId, this.artifactId, Constants.MAVEN_METADATA);
             }
         }
 
@@ -206,8 +206,8 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
                 file = file.substring(1);
             }
 
-            if (file.endsWith(MAVEN_METADATA)) {
-                File emf = new File(basedir, file + IN_PROCESS_MARKER);
+            if (file.endsWith(Constants.MAVEN_METADATA)) {
+                File emf = new File(basedir, file + Constants.IN_PROCESS_MARKER);
 
                 try {
                     targetWagon.get(file, emf);

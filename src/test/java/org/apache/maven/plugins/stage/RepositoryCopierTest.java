@@ -64,7 +64,7 @@ public class RepositoryCopierTest extends PlexusTestCase {
 
         assertTrue(versionDir.exists());
 
-        Reader r = new FileReader(new File(basedir, RepositoryCopier.MAVEN_METADATA));
+        Reader r = new FileReader(new File(basedir, Constants.MAVEN_METADATA));
 
         Metadata metadata = reader.read(r);
 
