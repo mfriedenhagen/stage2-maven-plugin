@@ -25,8 +25,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
 
+import org.apache.maven.artifact.deployer.ArtifactDeployer;
 import org.apache.maven.artifact.manager.WagonConfigurationException;
 import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.wagon.ConnectionException;
@@ -42,83 +42,17 @@ import org.apache.maven.wagon.repository.Repository;
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
 
 /**
  * @author Jason van Zyl
  * @plexus.component
  */
 public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
-    static class Gav {
-
-        final String groupId;
-
-        final String artifactId;
-
-        final String version;
-
-        final Pattern patternFiles;
-
-        final Pattern patternMeta;
-
-        Gav(String groupId, String artifactId, String version) {
-            this.groupId = toPath(StringUtils.split(groupId, "."));
-            this.artifactId = artifactId;
-            this.version = version;
-            final String escapedVersion = escape(version);
-            if (artifactId.equals("*")) {
-                patternFiles = compile(this.groupId, ".*", escapedVersion);
-                patternMeta = compile(this.groupId, ".*", Constants.MAVEN_METADATA);
-            } else {
-                patternFiles = compile(this.groupId, this.artifactId, escapedVersion);
-                patternMeta = compile(this.groupId, this.artifactId, Constants.MAVEN_METADATA);
-            }
-        }
-
-        /**
-         * Compiles a pattern from the splitted string combined with '/'.
-         * 
-         * @param split
-         * @return
-         */
-        private Pattern compile(final String... split) {
-            return Pattern.compile(toPath(split));
-        }
-
-        /**
-         * @param split
-         * @return
-         */
-        private String toPath(final String... split) {
-            return StringUtils.join(split, "/");
-        }
-
-        /**
-         * Escape regex patterns in the string.
-         * 
-         * @param version
-         * @return
-         */
-        private String escape(String version) {
-            return Pattern.quote(version);
-        }
-
-        public boolean matches(String file) {
-            return patternFiles.matcher(file).find() || patternMeta.matcher(file).find();
-        }
-
-        public static Gav valueOf(String version) {
-            String[] gavComponents = StringUtils.split(version, ":");
-            if (gavComponents.length != 3) {
-                throw new IllegalArgumentException(
-                        "version must have groupId:artifactId:version, where artifactId may be *");
-            }
-            return new Gav(gavComponents[0], gavComponents[1], gavComponents[2]);
-        }
-    }
-
     /** @plexus.requirement */
     private WagonManager wagonManager;
+
+    /** @plexus.requirement */
+    private ArtifactDeployer deployer;
 
     private Logger logger;
 
@@ -158,8 +92,11 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
         Wagon targetWagon = createTargetWagon(targetRepository);
 
         final String targetRepositoryUrl = targetRepository.getUrl();
-        final URI targetRepositoryUri = downloadAndMergeMetadata(files, basedir, targetWagon, targetRepositoryUrl);
-        uploadArtifacts(files, basedir, targetWagon, targetRepositoryUri);
+        final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl
+                : targetRepositoryUrl + "/");
+
+        downloadAndMergeMetadata(files, basedir, targetWagon, targetRepositoryUri);
+        //uploadArtifacts(files, basedir, targetWagon, targetRepositoryUri);
     }
 
     /**
@@ -187,18 +124,17 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
      * @param files
      * @param basedir
      * @param targetWagon
+     * @param targetRepositoryUri 
+     * @param targetRepositoryUri 
      * @param targetRepositoryUrl
      * @return
      * @throws TransferFailedException
      * @throws AuthorizationException
      * @throws IOException
      */
-    URI downloadAndMergeMetadata(List<String> files, File basedir, Wagon targetWagon, final String targetRepositoryUrl)
+    void downloadAndMergeMetadata(List<String> files, File basedir, Wagon targetWagon, URI targetRepositoryUri)
             throws TransferFailedException, AuthorizationException, IOException {
         logger.info("Downloading metadata from the target repository.");
-
-        final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl
-                : targetRepositoryUrl + "/");
 
         for (String file : files) {
 
@@ -206,23 +142,23 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
                 file = file.substring(1);
             }
 
-            if (file.endsWith(Constants.MAVEN_METADATA)) {
-                File emf = new File(basedir, file + Constants.IN_PROCESS_MARKER);
-
+            if (file.endsWith(Constants.POM)) {
+                final File pom = new File(basedir, file);
+                final File mavenMetadata = new File(new File(basedir, file).getParentFile().getParentFile(), Constants.MAVEN_METADATA);
+                final String relativeMavenMetadata = String.valueOf(basedir.toURI().relativize(mavenMetadata.toURI()));
                 try {
-                    targetWagon.get(file, emf);
+                    logger.debug("Downloading " + targetRepositoryUri.resolve(relativeMavenMetadata));
+                    targetWagon.get(relativeMavenMetadata, mavenMetadata);
                 } catch (ResourceDoesNotExistException e) {
                     // We don't have an equivalent on the targetRepositoryUrl side because we have something
                     // new on the sourceRepositoryUrl side so just skip the metadata merging.
-
                     continue;
                 }
-                final MetadataMerger metadataMerger = new MetadataMerger(emf);
-                metadataMerger.mergeMetadata();
+                final MetadataMerger metadataMerger = new MetadataMerger(mavenMetadata);
+                //metadataMerger.mergeMetadata(pom);
             }
 
         }
-        return targetRepositoryUri;
     }
 
     /**
@@ -260,7 +196,7 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
             AuthenticationException, TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
         List<String> files = new ArrayList<String>();
 
-        Wagon sourceWagon = createTargetWagon(sourceRepository);
+        final Wagon sourceWagon = createTargetWagon(sourceRepository);
 
         logger.info("Scanning source repository for all files.");
 

@@ -58,7 +58,7 @@ class MetadataMerger {
         this.existingMetadataFile = existingMetadataFile;
     }
 
-    void mergeMetadata() throws IOException {
+    void mergeMetadata(File pom) throws IOException {
         // Existing Metadata in target stage
         final File stagedMetadataFile = new File(existingMetadataFile.getParentFile(), Constants.MAVEN_METADATA);
         final Metadata existingMetadata = readFromFile(existingMetadataFile);
