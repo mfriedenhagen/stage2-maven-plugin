@@ -118,6 +118,8 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
         final AuthenticationInfo authenticationInfo = new AuthenticationInfo();
         authenticationInfo.setUserName(repository.getUsername());
         authenticationInfo.setPassword(repository.getPassword());
+        logger.info("DefaultRepositoryCopier.createWagon()" + authenticationInfo);
+        logger.info("DefaultRepositoryCopier.createWagon()" + repository.getParameter("preemptiveAuthentication"));
         wagon.connect(repository, authenticationInfo);
         return wagon;
     }
