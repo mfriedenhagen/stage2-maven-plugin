@@ -22,6 +22,7 @@ package org.apache.maven.plugins.stage;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.maven.artifact.manager.CredentialsDataSourceException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.repository.Repository;

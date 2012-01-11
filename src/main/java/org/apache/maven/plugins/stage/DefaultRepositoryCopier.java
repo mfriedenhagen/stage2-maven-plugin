@@ -26,9 +26,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.artifact.deployer.ArtifactDeployer;
+import org.apache.maven.artifact.manager.CredentialsDataSourceException;
 import org.apache.maven.artifact.manager.WagonConfigurationException;
 import org.apache.maven.artifact.manager.WagonManager;
+import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
@@ -48,6 +49,10 @@ import org.codehaus.plexus.util.FileUtils;
  * @plexus.component
  */
 public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
+
+    /** @plexus.requirement */
+    private Invoker invoker;
+
     /** @plexus.requirement */
     private WagonManager wagonManager;
 
@@ -66,17 +71,9 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
      * @param targetRepository
      * @param gav
      * @throws IOException
-     * @throws UnsupportedProtocolException
-     * @throws WagonConfigurationException
-     * @throws ConnectionException
-     * @throws AuthenticationException
-     * @throws TransferFailedException
-     * @throws ResourceDoesNotExistException
-     * @throws AuthorizationException
+     * @throws WagonException 
      */
-    void copy(Repository sourceRepository, Repository targetRepository, final Gav gav) throws IOException,
-            UnsupportedProtocolException, WagonConfigurationException, ConnectionException, AuthenticationException,
-            TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    void copy(Repository sourceRepository, Repository targetRepository, final Gav gav) throws IOException, WagonException {
         // Work directory
         String prefix = "staging-plugin";
 
@@ -86,32 +83,43 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
         List<String> files = collectAndDownloadFiles(sourceRepository, basedir, gav);
 
-        Wagon targetWagon = createTargetWagon(targetRepository);
+        Wagon targetWagon = createWagon(targetRepository);
 
         final String targetRepositoryUrl = targetRepository.getUrl();
         final URI targetRepositoryUri = URI.create(targetRepositoryUrl.endsWith("/") ? targetRepositoryUrl
                 : targetRepositoryUrl + "/");
-
+        final List<File> poms = getPoms(files, basedir);
+        logger.info("DefaultRepositoryCopier.copy()" + poms);
         downloadAndMergeMetadata(files, basedir, targetWagon, targetRepositoryUri);
         uploadArtifacts(files, basedir, targetWagon, targetRepositoryUri);
     }
 
     /**
-     * @param targetRepository
-     * @return
-     * @throws UnsupportedProtocolException
-     * @throws WagonConfigurationException
-     * @throws ConnectionException
-     * @throws AuthenticationException
+     * @param files
      */
-    Wagon createTargetWagon(Repository targetRepository) throws UnsupportedProtocolException,
-            WagonConfigurationException, ConnectionException, AuthenticationException {
-        Wagon targetWagon = wagonManager.getWagon(targetRepository);
+    private List<File> getPoms(List<String> files, File basedir) {
+        ArrayList<File> poms = new ArrayList<File>();
+        for (String file : files) {
+            if (FileUtils.extension(file).equals("pom")){
+                poms.add(new File(basedir, file));
+            }
+                
+        }
+        return poms;
+    }
 
-        AuthenticationInfo targetAuth = wagonManager.getAuthenticationInfo(targetRepository.getId());
-
-        targetWagon.connect(targetRepository, targetAuth);
-        return targetWagon;
+    /**
+     * @param repository
+     * @return
+     * @throws WagonException 
+     */
+    Wagon createWagon(Repository repository) throws WagonException{
+        final Wagon wagon = wagonManager.getWagon(repository);
+        final AuthenticationInfo authenticationInfo = new AuthenticationInfo();
+        authenticationInfo.setUserName(repository.getUsername());
+        authenticationInfo.setPassword(repository.getPassword());
+        wagon.connect(repository, authenticationInfo);
+        return wagon;
     }
 
     /**
@@ -125,12 +133,11 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
      * @param targetRepositoryUri 
      * @param targetRepositoryUrl
      * @return
-     * @throws TransferFailedException
-     * @throws AuthorizationException
-     * @throws IOException
+     * @throws WagonException 
+     * @throws IOException 
+     * @throws TransferFailedException 
      */
-    void downloadAndMergeMetadata(List<String> files, File basedir, Wagon targetWagon, URI targetRepositoryUri)
-            throws TransferFailedException, AuthorizationException, IOException {
+    void downloadAndMergeMetadata(List<String> files, File basedir, Wagon targetWagon, URI targetRepositoryUri) throws WagonException, IOException {
         logger.info("Downloading metadata from the target repository.");
 
         for (String file : files) {
@@ -181,20 +188,13 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
      * @param basedir
      * @param gav
      * @return
-     * @throws UnsupportedProtocolException
-     * @throws WagonConfigurationException
-     * @throws ConnectionException
-     * @throws AuthenticationException
-     * @throws TransferFailedException
-     * @throws ResourceDoesNotExistException
-     * @throws AuthorizationException
+     * @throws WagonException 
      */
-    List<String> collectAndDownloadFiles(Repository sourceRepository, File basedir, final Gav gav)
-            throws UnsupportedProtocolException, WagonConfigurationException, ConnectionException,
-            AuthenticationException, TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    List<String> collectAndDownloadFiles(Repository sourceRepository, File basedir, final Gav gav) throws WagonException
+             {
         List<String> files = new ArrayList<String>();
 
-        final Wagon sourceWagon = createTargetWagon(sourceRepository);
+        final Wagon sourceWagon = createWagon(sourceRepository);
 
         logger.info("Scanning source repository for all files.");
 
