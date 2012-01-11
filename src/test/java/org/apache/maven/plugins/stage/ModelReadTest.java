@@ -80,7 +80,7 @@ public class ModelReadTest {
      * 
      * @return The generated model, never <code>null</code>.
      */
-    private Model generateModel(String groupId, String artifactId, String version, String packaging)
+    Model generateModel(String groupId, String artifactId, String version, String packaging)
     {
         Model model = new Model();
         model.setModelVersion( "4.0.0" );

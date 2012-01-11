@@ -51,9 +51,6 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
     /** @plexus.requirement */
     private WagonManager wagonManager;
 
-    /** @plexus.requirement */
-    private ArtifactDeployer deployer;
-
     private Logger logger;
 
     public void copy(Repository sourceRepository, Repository targetRepository, String[] gavStrings)
@@ -96,7 +93,7 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
                 : targetRepositoryUrl + "/");
 
         downloadAndMergeMetadata(files, basedir, targetWagon, targetRepositoryUri);
-        //uploadArtifacts(files, basedir, targetWagon, targetRepositoryUri);
+        uploadArtifacts(files, basedir, targetWagon, targetRepositoryUri);
     }
 
     /**
@@ -143,19 +140,20 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
             }
 
             if (file.endsWith(Constants.POM)) {
-                final File pom = new File(basedir, file);
-                final File mavenMetadata = new File(new File(basedir, file).getParentFile().getParentFile(), Constants.MAVEN_METADATA);
-                final String relativeMavenMetadata = String.valueOf(basedir.toURI().relativize(mavenMetadata.toURI()));
+                final File pomFile = new File(basedir, file);
+                final File mavenMetadataFile = new File(new File(basedir, file).getParentFile().getParentFile(), Constants.MAVEN_METADATA);
+                final String relativeMavenMetadata = String.valueOf(basedir.toURI().relativize(mavenMetadataFile.toURI()));
+                final MetadataMerger metadataMerger = new MetadataMerger(mavenMetadataFile);
                 try {
-                    logger.debug("Downloading " + targetRepositoryUri.resolve(relativeMavenMetadata));
-                    targetWagon.get(relativeMavenMetadata, mavenMetadata);
+                    targetWagon.get(relativeMavenMetadata, mavenMetadataFile);
+                    logger.info("Downloaded " + targetRepositoryUri.resolve(relativeMavenMetadata) + " to " + mavenMetadataFile);
                 } catch (ResourceDoesNotExistException e) {
                     // We don't have an equivalent on the targetRepositoryUrl side because we have something
                     // new on the sourceRepositoryUrl side so just skip the metadata merging.
+                    metadataMerger.writeNewMetadata(pomFile);
                     continue;
                 }
-                final MetadataMerger metadataMerger = new MetadataMerger(mavenMetadata);
-                //metadataMerger.mergeMetadata(pom);
+                metadataMerger.mergeMetadata(pomFile);
             }
 
         }

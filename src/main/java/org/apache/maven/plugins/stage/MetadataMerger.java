@@ -33,11 +33,22 @@ import java.io.Reader;
 import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 import org.apache.maven.artifact.repository.metadata.Metadata;
+import org.apache.maven.artifact.repository.metadata.Plugin;
+import org.apache.maven.artifact.repository.metadata.Versioning;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Writer;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.project.validation.DefaultModelValidator;
+import org.apache.maven.project.validation.ModelValidationResult;
+import org.apache.maven.project.validation.ModelValidator;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.ReaderFactory;
+import org.codehaus.plexus.util.xml.XmlStreamReader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
@@ -58,30 +69,104 @@ class MetadataMerger {
         this.existingMetadataFile = existingMetadataFile;
     }
 
-    void mergeMetadata(File pom) throws IOException {
-        // Existing Metadata in target stage
-        final File stagedMetadataFile = new File(existingMetadataFile.getParentFile(), Constants.MAVEN_METADATA);
+    void writeNewMetadata(File pomFile) throws IOException {
+        final Metadata metadataFromPom = createMetadataFromPom(pomFile);
+        writeMetadata(metadataFromPom);
+    }
+
+    void mergeMetadata(File pomFile) throws IOException {
+        final Metadata metadataFromPom = createMetadataFromPom(pomFile);
         final Metadata existingMetadata = readFromFile(existingMetadataFile);
-        final Metadata stagedMetadata = readFromFile(stagedMetadataFile);
-        existingMetadata.merge(stagedMetadata);
-        stagedMetadataFile.delete();
-        // Write back the merged data to the staged file.
-        final Writer stagedMetadataFileWriter = new FileWriter(stagedMetadataFile);
+        existingMetadata.merge(metadataFromPom);
+        writeMetadata(existingMetadata);
+
+    }
+
+    /**
+     * @param existingMetadata
+     * @throws IOException
+     */
+    private void writeMetadata(final Metadata existingMetadata) throws IOException {
+        // Write back the merged data.
+        final Writer metadataFileWriter = new FileWriter(existingMetadataFile);
         try {
-            writer.write(stagedMetadataFileWriter, existingMetadata);
+            writer.write(metadataFileWriter, existingMetadata);
         } finally {
-            stagedMetadataFileWriter.close();
+            metadataFileWriter.close();
         }
         // Regenerate the checksums as they will be different after the merger
         try {
-            final File md5 = new File(stagedMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".md5");
-            FileUtils.fileWrite(md5.getAbsolutePath(), checksum(stagedMetadataFile, Constants.MD5));
-            final File sha1 = new File(stagedMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".sha1");
-            FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(stagedMetadataFile, Constants.SHA1));
+            final File md5 = new File(existingMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".md5");
+            FileUtils.fileWrite(md5.getAbsolutePath(), checksum(existingMetadataFile, Constants.MD5));
+            final File sha1 = new File(existingMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".sha1");
+            FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(existingMetadataFile, Constants.SHA1));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    /**
+     * @param pomFile
+     * @return
+     * @throws IOException
+     */
+    private Metadata createMetadataFromPom(File pomFile) throws IOException {
+        final Model pom = fromPomFile(pomFile);
+        final Metadata metadataFromPom = new Metadata();
+        metadataFromPom.setGroupId(pom.getGroupId());
+        metadataFromPom.setArtifactId(pom.getArtifactId());
+        metadataFromPom.setVersion(pom.getVersion());
+        final Versioning versioning = new Versioning();
+        versioning.addVersion(pom.getVersion());
+        versioning.setLastUpdatedTimestamp(new Date());
+        versioning.setRelease(pom.getVersion());
+        versioning.setLatest(pom.getVersion());
+        metadataFromPom.setVersioning(versioning);
+        if (pom.getPackaging().equals("maven-plugin")) {
+            final Plugin plugin = new Plugin();
+            plugin.setArtifactId(pom.getArtifactId());
+            metadataFromPom.addPlugin(plugin);
+        }
+        return metadataFromPom;
+    }
+
+    private Model fromPomFile(final File pom) throws IOException {
+        final XmlStreamReader reader = ReaderFactory.newXmlReader(pom);
+        final Model model;
+        try {
+            model = new MavenXpp3Reader().read(reader);
+        } catch (XmlPullParserException e) {
+            throw new IOException("Could not create model from " + pom, e);
+        } finally {
+            reader.close();
+        }
+        final Parent parent = model.getParent();
+        String groupId = model.getGroupId() == null ? parent.getGroupId() : model.getGroupId();
+        String artifactId = model.getArtifactId();
+        String version = model.getVersion() == null ? parent.getVersion() : model.getVersion();
+        String packaging = model.getPackaging();
+        final Model newModel = generateModel(groupId, artifactId, version, packaging);
+        ModelValidator validator = new DefaultModelValidator();
+//        ModelValidationResult validationResult = validator.validate(newModel);
+//        if (validationResult.getMessageCount() > 0) {
+//            throw new IOException(validationResult.toString());
+//        }
+        return newModel;
+    }
+
+    /**
+     * Generates a minimal model from the user-supplied artifact information.
+     * 
+     * @return The generated model, never <code>null</code>.
+     */
+    Model generateModel(String groupId, String artifactId, String version, String packaging) {
+        Model model = new Model();
+        model.setModelVersion("4.0.0");
+        model.setGroupId(groupId);
+        model.setArtifactId(artifactId);
+        model.setVersion(version);
+        model.setPackaging(packaging);
+        return model;
     }
 
     private Metadata readFromFile(File metadataFile) throws IOException {

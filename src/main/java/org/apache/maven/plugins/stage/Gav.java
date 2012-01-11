@@ -53,7 +53,7 @@ class Gav {
     }
 
     public boolean matches(String file) {
-        return patternFiles.matcher(file).find();// || patternMeta.matcher(file).find();
+        return patternFiles.matcher(file).find() || patternMeta.matcher(file).find();
     }
 
     public static Gav valueOf(String version) {
