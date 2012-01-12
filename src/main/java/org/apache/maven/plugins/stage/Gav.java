@@ -56,6 +56,12 @@ class Gav {
         return patternFiles.matcher(file).find() || patternMeta.matcher(file).find();
     }
 
+    @Override
+    public String toString() {
+        return String.format("gav=%s/%s/%s", groupId, artifactId, version);
+    }
+
+    
     public static Gav valueOf(String version) {
         String[] gavComponents = StringUtils.split(version, ":");
         if (gavComponents.length != 3) {

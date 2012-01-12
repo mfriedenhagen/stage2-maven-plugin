@@ -20,9 +20,9 @@ package org.apache.maven.plugins.stage;
  */
 
 import java.io.IOException;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 
 import org.apache.maven.wagon.WagonException;
-import org.apache.maven.wagon.repository.Repository;
 
 /**
  * @author Mirko Friedenhagen
@@ -30,5 +30,5 @@ import org.apache.maven.wagon.repository.Repository;
 public interface RepositoryDownloader {
     String ROLE = RepositoryDownloader.class.getName();
 
-    void download(Repository sourceRepository, String[] gavStrings) throws WagonException, IOException;
+    void download(ArtifactRepository sourceRepository, String[] gavStrings) throws WagonException, IOException;
 }
