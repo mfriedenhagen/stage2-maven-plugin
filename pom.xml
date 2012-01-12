@@ -19,8 +19,8 @@
         <relativePath>../maven-plugins/pom.xml</relativePath>
     </parent>
 
-    <artifactId>maven-stage-plugin</artifactId>
-    <version>1.0-alpha-3-SNAPSHOT</version>
+    <artifactId>maven-stage2-plugin</artifactId>
+    <version>1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Maven Stage Plugin</name>
