@@ -63,15 +63,15 @@ class DefaultRepositoryDownloader implements RepositoryDownloader, LogEnabled {
         deleteAndCreateTempDir();
         logger.info("Gathering artifacts from " + sourceRepository.getUrl() + ", gav=" + gav + " to " + basedir);
         final ArrayList<String> rawFiles = new ArrayList<String>();
-        scan(wagon, "", rawFiles);
-        logger.info("Found " + rawFiles.size() + " files in " + sourceRepository.getUrl());
+        scan(wagon, gav.groupIdPath + "/", rawFiles);
+        logger.info("Found " + rawFiles.size() + " files in " + sourceRepository.getUrl() + gav.groupIdPath);
         final ArrayList<String> files = new ArrayList<String>();
         for (String file : rawFiles) {
             if (gav.matches(file)) {
                 files.add(file);
             }
         }
-        logger.info("Found " + files.size() + " files in " + sourceRepository.getUrl() + " matching " + gav);
+        logger.info("Found " + files.size() + " files in " + sourceRepository.getUrl() + gav.groupIdPath + " matching " + gav);
     }
 
     Wagon createWagon(ArtifactRepository artifactRepository) throws WagonException {
@@ -95,12 +95,13 @@ class DefaultRepositoryDownloader implements RepositoryDownloader, LogEnabled {
         this.logger = logger;
     }
     private void scan(Wagon wagon, String basePath, List<String> collected) {
+        logger.debug("Searching in " + basePath);
         try {
             if (basePath.indexOf(".svn") >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index")) {
             } else {
                 @SuppressWarnings("unchecked")
                 List<String> files = wagon.getFileList(basePath);
-
+                logger.debug("Found files in the source repository: " + files);
                 if (files.isEmpty()) {
                     collected.add(basePath);
                 } else {

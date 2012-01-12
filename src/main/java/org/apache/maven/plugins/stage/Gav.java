@@ -65,7 +65,7 @@ class Gav {
 
     @Override
     public String toString() {
-        return String.format("gav=%s/%s/%s", groupId, artifactId, version);
+        return String.format("gav=%s/%s/%s", groupIdPath, artifactId, version);
     }
 
     public String getEncodedPath() {
