@@ -4,13 +4,19 @@
 
 package org.apache.maven.plugins.stage;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.codehaus.plexus.util.StringUtils;
 
 class Gav {
 
-    private final String groupId;
+    final String groupIdPath;
+
+    final String groupId;
 
     final String artifactId;
 
@@ -21,16 +27,17 @@ class Gav {
     final Pattern patternMeta;
 
     Gav(String groupId, String artifactId, String version) {
-        this.groupId = toPath(StringUtils.split(groupId, "."));
+        this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
         final String escapedVersion = Pattern.quote(version);
+        groupIdPath = toPath(StringUtils.split(groupId, "."));
         if (artifactId.equals("*")) {
-            patternFiles = compile(this.groupId, ".*", escapedVersion);
-            patternMeta = compile(this.groupId, ".*", Constants.MAVEN_METADATA);
+            patternFiles = compile(groupIdPath, ".*", escapedVersion);
+            patternMeta = compile(groupIdPath, ".*", Constants.MAVEN_METADATA);
         } else {
-            patternFiles = compile(this.groupId, this.artifactId, escapedVersion);
-            patternMeta = compile(this.groupId, this.artifactId, Constants.MAVEN_METADATA);
+            patternFiles = compile(groupIdPath, this.artifactId, escapedVersion);
+            patternMeta = compile(groupIdPath, this.artifactId, Constants.MAVEN_METADATA);
         }
     }
 
@@ -61,6 +68,13 @@ class Gav {
         return String.format("gav=%s/%s/%s", groupId, artifactId, version);
     }
 
+    public String getEncodedPath() {
+        try {
+            return URLEncoder.encode(groupId + ":" + artifactId + ":" + version, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }        
+    }
     
     public static Gav valueOf(String version) {
         String[] gavComponents = StringUtils.split(version, ":");
