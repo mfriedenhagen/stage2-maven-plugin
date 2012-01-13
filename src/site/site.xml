@@ -34,7 +34,7 @@ under the License.
     <fluidoSkin>
       <searchEnabled>true</searchEnabled>
       <topBarEnabled>false</topBarEnabled>
-      <sideBarEnabled>false</sideBarEnabled>
+      <sideBarEnabled>true</sideBarEnabled>
     </fluidoSkin>
   </custom>
   <body>
