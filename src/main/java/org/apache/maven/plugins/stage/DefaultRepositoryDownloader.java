@@ -51,6 +51,15 @@ class DefaultRepositoryDownloader extends ReadOnlyRepository implements Reposito
         deleteAndCreateTempDir();
         getLogger().info("Gathering artifacts from " + sourceRepository.getUrl() + ", gav=" + gav + " to " + basedir);
         ArrayList<String> files = collectFiles(sourceRepository, gav);
+        getLogger().info("Downloading " + files.size() + " files from the source repository to " + basedir);
+        final Wagon sourceWagon = createWagon(sourceRepository);
+        for (final String source : files) {
+            final File target = new File(basedir, source);
+            FileUtils.mkdir(target.getParentFile().getAbsolutePath());
+            getLogger().debug("Downloading file from the source repository: " + source);
+            sourceWagon.get(source, target);
+        }
+        getLogger().info("Downloaded " + files.size() + "  files from the source repository to " + basedir);
     }
 
     /**
