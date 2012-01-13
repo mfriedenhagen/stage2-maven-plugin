@@ -39,8 +39,10 @@ Maven Stage Plugin
 
   * {{{./list-mojo.html}stage2:list}} List artifacts from one repository which
     match given gav combinations.
+
   * {{{./download-mojo.html}stage2:download}} Download artifacts from one repository which
     match given gav combinations.
+
   * {{{./copy-mojo.html}stage2:copy}} Copies artifacts from one repository to
     another repository.
 
