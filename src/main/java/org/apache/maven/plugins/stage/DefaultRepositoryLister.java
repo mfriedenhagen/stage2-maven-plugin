@@ -16,17 +16,23 @@
 package org.apache.maven.plugins.stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.wagon.WagonException;
 
 /**
  *
- * @author mirko
+ * @author mifr
+ *
+ * @plexus.component
+ *
  */
-public interface RepositoryLister {
-
-    String ROLE = RepositoryLister.class.getName();
+public class DefaultRepositoryLister extends ReadOnlyRepository implements RepositoryLister {
     
-    void list(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException;
-    
+    /** @Override */
+    @Override
+    public void list(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException {
+        final ArrayList<String> files = collectFiles(sourceRepository, gav);
+        getLogger().info("Found " + files + " at " + sourceRepository.getUrl() + " matching " + gav);
+    }
 }

@@ -44,127 +44,29 @@ import org.apache.maven.wagon.repository.Repository;
  * @requiresProject false
  * @goal download
  */
-public class DownloadRepositoryMojo extends AbstractMojo {
+public class DownloadRepositoryMojo extends ReadOnlyRepositoryMojo {
     
-    private static final Pattern ALT_REPO_SYNTAX_PATTERN = Pattern.compile( "(.+)::(.+)::(.+)" );
-
     /**
      * @component
      */
     private RepositoryDownloader repositoryDownloader;
     
-    /**
-     * Component used to create a repository.
-     *
-     * @component
-     */
-    ArtifactRepositoryFactory repositoryFactory;
-
-    /**
-     * Map that contains the layouts.
-     *
-     * @component role="org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout"
-     */
-    private Map repositoryLayouts;
-
- 
-   /**
-     * Specifies an repository from which the project artifacts should be downloaded.
-     * 
-     * <br/>
-     * 
-     * Format: id::layout::url
-     * 
-     * @parameter expression="${stage.sourceRepository}"
-     * @required
-     */
-    private String sourceRepository;
-    
-    /**
-     * The GAV coordinates of the artifact that is to be copied. This is a comma separated list of coordinates like
-     * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
-     * <p>
-     * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
-     * </p>
-     * 
-     * @parameter expression="${stage.gavs}"
-     * @required
-     */
-    private String[] gavs;
-
-    /**
-     * @return the gavs given on the command line.
-     */
-    String[] getGavs() {
-        return gavs;
-    }
-
-    /**
-     * The repository copier to use.
-     * 
-     * @component
-     */
-    private RepositoryCopier copier;
-
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (getGavs().length == 0) {
             throw new MojoExecutionException("Need to have gavs");
         }
         getLog().info("gavs=" + Arrays.toString(getGavs()));
         final ArtifactRepository repository = getSourceRepository();
-        for (String gavString : gavs) {
+        for (String gavString : getGavs()) {
             final Gav gav = Gav.valueOf(gavString);
             try {
                 repositoryDownloader.download(repository, gav);
             } catch (WagonException e) {
-                throw new MojoExecutionException("Error", e);
+                throw new MojoExecutionException("Error downloading " + gav, e);
             } catch (IOException e) {
-                throw new MojoExecutionException("Error", e);
+                throw new MojoExecutionException("Error downloading " + gav, e);
             }
         }
         
     }
-    private ArtifactRepository getSourceRepository()
-            throws MojoExecutionException, MojoFailureException {
-        ArtifactRepository repo = null;
-
-        if (sourceRepository != null) {
-            getLog().info("Using source repository " + sourceRepository);
-
-            Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher(sourceRepository);
-
-            if (!matcher.matches()) {
-                throw new MojoFailureException(sourceRepository, "Invalid syntax for repository.",
-                        "Invalid syntax for sourceRepository. Use \"id::layout::url\".");
-            } else {
-                String id = matcher.group(1).trim();
-                String layout = matcher.group(2).trim();
-                String url = matcher.group(3).trim();
-
-                ArtifactRepositoryLayout repoLayout = getLayout(layout);
-
-                repo = repositoryFactory.createDeploymentArtifactRepository(id, url, repoLayout, true);
-            }
-        }
-
-        if (repo == null) {
-            String msg = "Deployment failed: invalid or missing '-Dstage.sourceRepository=id::layout::url' parameter";
-
-            throw new MojoExecutionException(msg);
-        }
-
-        return repo;
-    }
-
-    ArtifactRepositoryLayout getLayout(String id)
-            throws MojoExecutionException {
-        ArtifactRepositoryLayout layout = (ArtifactRepositoryLayout) repositoryLayouts.get(id);
-
-        if (layout == null) {
-            throw new MojoExecutionException("Invalid repository layout: " + id);
-        }
-
-        return layout;
-    }
-
 }

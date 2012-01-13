@@ -15,9 +15,13 @@
  */
 package org.apache.maven.plugins.stage;
 
+import java.io.IOException;
+import java.util.Arrays;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.wagon.WagonException;
 
 /**
  * List artifacts from the source repository matching gavs.
@@ -25,13 +29,32 @@ import org.apache.maven.plugin.MojoFailureException;
  * @author Mirko Friedenhagen
  *
  * @requiresProject false
- * @goal download
+ * @goal list
  *
  */
-public class ListRepositoryMojo extends AbstractMojo {
+public class ListRepositoryMojo extends ReadOnlyRepositoryMojo {
 
+    /**
+     * @component RepositoryLister
+     */
+    private RepositoryLister repositoryLister;
+    
     public void execute() throws MojoExecutionException, MojoFailureException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (getGavs().length == 0) {
+            throw new MojoExecutionException("Need to have gavs");
+        }
+        getLog().info("gavs=" + Arrays.toString(getGavs()));
+        final ArtifactRepository repository = getSourceRepository();
+        for (String gavString : getGavs()) {
+            final Gav gav = Gav.valueOf(gavString);
+            try {
+                repositoryLister.list(repository, gav);
+            } catch (WagonException e) {
+                throw new MojoExecutionException("Error listing " + gav, e);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Error listing " + gav, e);
+            }
+        }
     }
 
 }

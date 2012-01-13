@@ -28,9 +28,8 @@ import org.apache.maven.wagon.WagonException;
  * @author Mirko Friedenhagen
  */
 interface RepositoryDownloader {
-    String ROLE = RepositoryDownloader.class.getName();
 
-    void download(ArtifactRepository sourceRepository, String[] gavStrings) throws WagonException, IOException;
+    String ROLE = RepositoryDownloader.class.getName();
 
     void download(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException;
 
