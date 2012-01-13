@@ -42,6 +42,10 @@
         <url>https://github.com/mfriedenhagen/stage2-maven-plugin/issues</url>
     </issueManagement>
 
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>http://huschteguzzel.de/hudson/job/stage2-maven-plugin/</url>
+    </ciManagement>
     <properties>
         <wagonVersion>2.2</wagonVersion>
         <mavenVersion>3.0.2</mavenVersion>
