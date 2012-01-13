@@ -1,4 +1,4 @@
-package org.apache.maven.plugins.stage;
+package org.codehaus.mojo.stage2;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,9 +27,8 @@ import org.apache.maven.wagon.repository.Repository;
 /**
  * @author Mirko Friedenhagen
  */
-public interface RepositoryMetaMerger {
-    String ROLE = RepositoryMetaMerger.class.getName();
+public interface RepositoryUploader {
+    String ROLE = RepositoryUploader.class.getName();
 
-    void merge(Repository sourceRepository, Repository targetRepository, String[] gavStrings) throws WagonException,
-            IOException;
+    void copy(Repository targetRepository, String[] gavStrings) throws WagonException, IOException;
 }

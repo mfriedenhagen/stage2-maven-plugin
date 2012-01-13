@@ -2,7 +2,7 @@
  * Copyright 2012 Mirko Friedenhagen 
  */
 
-package org.apache.maven.plugins.stage;
+package org.codehaus.mojo.stage2;
 
 /**
  * @author mirko

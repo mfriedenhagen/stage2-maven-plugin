@@ -1,4 +1,4 @@
-package org.apache.maven.plugins.stage;
+package org.codehaus.mojo.stage2;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,16 +20,17 @@ package org.apache.maven.plugins.stage;
  */
 
 import java.io.IOException;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 
 import org.apache.maven.wagon.WagonException;
-import org.apache.maven.wagon.repository.Repository;
 
 /**
- * @author Jason van Zyl
+ * @author Mirko Friedenhagen
  */
-public interface RepositoryCopier {
-    String ROLE = RepositoryCopier.class.getName();
+interface RepositoryDownloader {
 
-    void copy(Repository sourceRepository, Repository targetRepository, String[] gavStrings) throws WagonException,
-            IOException;
+    String ROLE = RepositoryDownloader.class.getName();
+
+    void download(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException;
+
 }

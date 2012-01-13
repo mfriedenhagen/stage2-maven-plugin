@@ -1,5 +1,7 @@
-package org.apache.maven.plugins.stage;
+package org.codehaus.mojo.stage2;
 
+import org.codehaus.mojo.stage2.RepositoryCopier;
+import org.codehaus.mojo.stage2.Constants;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;

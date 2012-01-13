@@ -1,4 +1,4 @@
-package org.apache.maven.plugins.stage;
+package org.codehaus.mojo.stage2;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

@@ -2,8 +2,9 @@
  * Copyright 2012 Mirko Friedenhagen 
  */
 
-package org.apache.maven.plugins.stage;
+package org.codehaus.mojo.stage2;
 
+import org.codehaus.mojo.stage2.Constants;
 import static org.junit.Assert.*;
 
 import java.io.File;
