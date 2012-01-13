@@ -51,7 +51,6 @@ public class DownloadRepositoryMojo extends AbstractMojo {
     /**
      * @component
      */
-
     private RepositoryDownloader repositoryDownloader;
     
     /**
@@ -70,8 +69,7 @@ public class DownloadRepositoryMojo extends AbstractMojo {
 
  
    /**
-     * Specifies an alternative repository to which the project artifacts should be deployed ( other
-     * than those specified in &lt;distributionManagement&gt; ).
+     * Specifies an repository from which the project artifacts should be downloaded.
      * 
      * <br/>
      * 
@@ -89,7 +87,7 @@ public class DownloadRepositoryMojo extends AbstractMojo {
      * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
      * </p>
      * 
-     * @parameter expression="${gavs}"
+     * @parameter expression="${stage.gavs}"
      * @required
      */
     private String[] gavs;
@@ -114,12 +112,15 @@ public class DownloadRepositoryMojo extends AbstractMojo {
         }
         getLog().info("gavs=" + Arrays.toString(getGavs()));
         final ArtifactRepository repository = getSourceRepository();
-        try {
-            repositoryDownloader.download(repository, gavs);
-        } catch (WagonException e) {
-            throw new MojoExecutionException("Error", e);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Error", e);
+        for (String gavString : gavs) {
+            final Gav gav = Gav.valueOf(gavString);
+            try {
+                repositoryDownloader.download(repository, gav);
+            } catch (WagonException e) {
+                throw new MojoExecutionException("Error", e);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Error", e);
+            }
         }
         
     }
@@ -134,7 +135,7 @@ public class DownloadRepositoryMojo extends AbstractMojo {
 
             if (!matcher.matches()) {
                 throw new MojoFailureException(sourceRepository, "Invalid syntax for repository.",
-                        "Invalid syntax for alternative repository. Use \"id::layout::url\".");
+                        "Invalid syntax for sourceRepository. Use \"id::layout::url\".");
             } else {
                 String id = matcher.group(1).trim();
                 String layout = matcher.group(2).trim();
@@ -147,7 +148,7 @@ public class DownloadRepositoryMojo extends AbstractMojo {
         }
 
         if (repo == null) {
-            String msg = "Deployment failed: invalid or missing '-DsourceRepository=id::layout::url' parameter";
+            String msg = "Deployment failed: invalid or missing '-Dstage.sourceRepository=id::layout::url' parameter";
 
             throw new MojoExecutionException(msg);
         }
