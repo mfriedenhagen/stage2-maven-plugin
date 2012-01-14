@@ -20,15 +20,16 @@ package org.codehaus.mojo.stage2;
  */
 
 import java.io.IOException;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 
 import org.apache.maven.wagon.WagonException;
-import org.apache.maven.wagon.repository.Repository;
 
 /**
  * @author Mirko Friedenhagen
  */
 public interface RepositoryUploader {
+
     String ROLE = RepositoryUploader.class.getName();
 
-    void copy(Repository targetRepository, String[] gavStrings) throws WagonException, IOException;
+    void upload(ArtifactRepository targetRepository, Gav gav) throws WagonException, IOException;
 }

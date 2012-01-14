@@ -75,16 +75,22 @@ public abstract class ReadOnlyRepositoryMojo extends AbstractMojo {
 
     ArtifactRepository getSourceRepository()
             throws MojoExecutionException, MojoFailureException {
+
+        return getRepository(sourceRepository, "stage.sourceRepository");
+    }
+
+    ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException
+    {
         ArtifactRepository repo = null;
+        
+        if (artifactRepository != null) {
+            getLog().info("Using " + role + " " + artifactRepository);
 
-        if (sourceRepository != null) {
-            getLog().info("Using source repository " + sourceRepository);
-
-            Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher(sourceRepository);
+            Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher(artifactRepository);
 
             if (!matcher.matches()) {
-                throw new MojoFailureException(sourceRepository, "Invalid syntax for repository.",
-                        "Invalid syntax for sourceRepository. Use \"id::layout::url\".");
+                throw new MojoFailureException(artifactRepository, "Invalid syntax for " + role,
+                        "Invalid syntax for " + role + ". Use \"id::layout::url\".");
             } else {
                 String id = matcher.group(1).trim();
                 String layout = matcher.group(2).trim();
@@ -97,8 +103,7 @@ public abstract class ReadOnlyRepositoryMojo extends AbstractMojo {
         }
 
         if (repo == null) {
-            String msg = "Deployment failed: invalid or missing '-Dstage.sourceRepository=id::layout::url' parameter";
-
+            String msg = "List or download failed: invalid or missing '-D" + role + "=id::layout::url' parameter";
             throw new MojoExecutionException(msg);
         }
 

@@ -37,7 +37,7 @@ import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.repository.Repository;
 
 /**
- * Copies artifacts from one repository to another repository.
+ * Downloads artifacts from a repository to a temporary directory.
  * 
  * @author Mirko Friedenhagen
  *
