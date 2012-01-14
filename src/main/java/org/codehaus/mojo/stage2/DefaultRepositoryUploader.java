@@ -24,28 +24,30 @@ import org.codehaus.plexus.logging.Logger;
 
 /**
  *
- * @author mirko @plexus.component
+ * @author mirko 
+ *
+ * @plexus.component
  */
-class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled
-{
+class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
 
     private Logger logger;
+
     private File basedir;
 
-    /** @inheritDoc */
+    /**
+     * @inheritDoc
+     */
     @Override
-    public void upload( ArtifactRepository targetRepository, Gav gav ) throws WagonException, IOException
-    {
+    public void upload(ArtifactRepository targetRepository, Gav gav) throws WagonException, IOException {
         basedir = new File( new File( System.getProperty( "java.io.tmpdir" ), "staging-plugin" ), gav.getEncodedPath() );
-        if ( !basedir.exists() )
-        {
-            throw new IllegalArgumentException( "staging path " + basedir + " could not be found" );
+        if ( !basedir.exists() ) {
+            throw new IllegalArgumentException("staging path " + basedir + " could not be found");
         }
+        logger.info("Uploading from " + basedir + " to " + targetRepository.getUrl());
     }
 
     @Override
-    public void enableLogging( Logger logger )
-    {
+    public void enableLogging( Logger logger ) {
         this.logger = logger;
     }
 }
