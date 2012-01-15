@@ -31,8 +31,9 @@ import org.codehaus.plexus.logging.Logger;
  * @author Mirko Friedenhagen
  * 
  * @plexus.component
+ *
  */
-public class DefaultArtifactRepositoryCreator implements LogEnabled {
+class DefaultArtifactRepositoryCreator implements LogEnabled, ArtifactRepositoryCreator {
     
     private Logger logger;
     
@@ -52,7 +53,7 @@ public class DefaultArtifactRepositoryCreator implements LogEnabled {
      */
     private Map repositoryLayouts;
 
-    ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException {
+    public ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException {
         ArtifactRepository repo = null;
         if (artifactRepository != null)
         {

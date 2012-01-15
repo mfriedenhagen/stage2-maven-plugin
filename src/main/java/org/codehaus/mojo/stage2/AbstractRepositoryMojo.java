@@ -29,11 +29,7 @@ import org.apache.maven.plugin.MojoFailureException;
  *
  * @author Mirko Friedenhagen
  */
-public abstract class AbstractRepositoryMojo extends AbstractMojo
-{
-
-    private static final Pattern ALT_REPO_SYNTAX_PATTERN = Pattern.compile( "(.+)::(.+)::(.+)" );
-
+public abstract class AbstractRepositoryMojo extends AbstractMojo {
     /**
      * The GAV coordinates of the artifact that is to be copied. This is a comma separated list of coordinates like
      * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
@@ -46,21 +42,9 @@ public abstract class AbstractRepositoryMojo extends AbstractMojo
      */
     private String[] gavs;
 
-    /**
-     * Component used to create a repository.
-     *
-     * @component
+    /** 
+     * @component ArtifactRepositoryCreator 
      */
-    private ArtifactRepositoryFactory repositoryFactory;
-
-    /**
-     * Map that contains the layouts.
-     *
-     * @component role="org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout"
-     */
-    private Map repositoryLayouts;
-    
-    /** @component ArtifactRepositoryCreator */
     private ArtifactRepositoryCreator artifactRepositoryCreator;
 
     /**
@@ -71,42 +55,7 @@ public abstract class AbstractRepositoryMojo extends AbstractMojo
         return gavs;
     }
 
-    ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException
-    {
-        ArtifactRepository repo = null;
-        if (artifactRepository != null)
-        {
-            getLog().info("Using " + role + " " + artifactRepository);
-            Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher(artifactRepository);
-            if ( !matcher.matches() )
-            {
-                throw new MojoFailureException( artifactRepository, "Invalid syntax for " + role, "Invalid syntax for " + role + ". Use \"id::layout::url\"." );
-            }
-            else
-            {
-                String id = matcher.group( 1 ).trim();
-                String layout = matcher.group( 2 ).trim();
-                String url = matcher.group( 3 ).trim();
-                ArtifactRepositoryLayout repoLayout = getLayout( layout );
-                repo = repositoryFactory.createDeploymentArtifactRepository( id, url, repoLayout, true );
-            }
-        }
-        if ( repo == null )
-        {
-            String msg = "List or download failed: invalid or missing '-D" + role + "=id::layout::url' parameter";
-            throw new MojoExecutionException( msg );
-        }
-        return repo;
+    ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException {
+        return artifactRepositoryCreator.getRepository(artifactRepository, role);
     }
-
-    private ArtifactRepositoryLayout getLayout(String id) throws MojoExecutionException
-    {
-        ArtifactRepositoryLayout layout = (ArtifactRepositoryLayout) repositoryLayouts.get(id);
-        if (layout == null)
-        {
-            throw new MojoExecutionException("Invalid repository layout: " + id);
-        }
-        return layout;
-    }
-
 }
