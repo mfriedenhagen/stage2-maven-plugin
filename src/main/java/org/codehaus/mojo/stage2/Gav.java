@@ -70,7 +70,8 @@ class Gav {
 
     public String getEncodedPath() {
         try {
-            return URLEncoder.encode(groupId + ":" + artifactId + ":" + version, "UTF-8");
+            final String name = artifactId.equals("*") ? "ALL_ARTIFACTS" : artifactId;
+            return URLEncoder.encode(groupId + ":" + name + ":" + version, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }        
