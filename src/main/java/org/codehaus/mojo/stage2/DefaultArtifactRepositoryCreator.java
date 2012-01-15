@@ -21,62 +21,42 @@ import java.util.regex.Pattern;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.ArtifactRepositoryFactory;
 import org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.codehaus.plexus.logging.LogEnabled;
+import org.codehaus.plexus.logging.Logger;
 
 /**
  *
  * @author Mirko Friedenhagen
+ * 
+ * @plexus.component
  */
-public abstract class AbstractRepositoryMojo extends AbstractMojo
-{
-
+public class DefaultArtifactRepositoryCreator implements LogEnabled {
+    
+    private Logger logger;
+    
     private static final Pattern ALT_REPO_SYNTAX_PATTERN = Pattern.compile( "(.+)::(.+)::(.+)" );
-
-    /**
-     * The GAV coordinates of the artifact that is to be copied. This is a comma separated list of coordinates like
-     * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
-     * <p>
-     * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
-     * </p>
-     *
-     * @parameter expression="${stage.gavs}"
-     * @required
-     */
-    private String[] gavs;
-
+    
     /**
      * Component used to create a repository.
      *
-     * @component
+     * @plexus.requirement
      */
     private ArtifactRepositoryFactory repositoryFactory;
 
     /**
      * Map that contains the layouts.
      *
-     * @component role="org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout"
+     * @plexus.requirement role="org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout"
      */
     private Map repositoryLayouts;
-    
-    /** @component ArtifactRepositoryCreator */
-    private ArtifactRepositoryCreator artifactRepositoryCreator;
 
-    /**
-     * @return the gavs given on the command line.
-     */
-    String[] getGavs()
-    {
-        return gavs;
-    }
-
-    ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException
-    {
+    ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException {
         ArtifactRepository repo = null;
         if (artifactRepository != null)
         {
-            getLog().info("Using " + role + " " + artifactRepository);
+            logger.info("Using " + role + " " + artifactRepository);
             Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher(artifactRepository);
             if ( !matcher.matches() )
             {
@@ -99,6 +79,12 @@ public abstract class AbstractRepositoryMojo extends AbstractMojo
         return repo;
     }
 
+    @Override
+    public void enableLogging( Logger logger )
+    {
+        this.logger = logger;
+    }
+    
     private ArtifactRepositoryLayout getLayout(String id) throws MojoExecutionException
     {
         ArtifactRepositoryLayout layout = (ArtifactRepositoryLayout) repositoryLayouts.get(id);

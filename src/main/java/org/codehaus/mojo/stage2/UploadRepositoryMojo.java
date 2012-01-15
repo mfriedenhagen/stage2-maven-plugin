@@ -20,6 +20,7 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.deploy.AbstractDeployMojo;
 import org.apache.maven.wagon.WagonException;
 
 /**
@@ -30,7 +31,7 @@ import org.apache.maven.wagon.WagonException;
  * @requiresProject false
  * @goal upload
  */
-public class UploadRepositoryMojo extends AbstractRepositoryMojo {
+public class UploadRepositoryMojo extends AbstractDeployMojo {
   /**
      * Specifies an repository to which the project artifacts should be uploaded.
      * 
@@ -43,14 +44,29 @@ public class UploadRepositoryMojo extends AbstractRepositoryMojo {
      */
     private String targetRepository;
 
+   /**
+     * The GAV coordinates of the artifact that is to be copied. This is a comma separated list of coordinates like
+     * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
+     * <p>
+     * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
+     * </p>
+     *
+     * @parameter expression="${stage.gavs}"
+     * @required
+     */
+    private String[] gavs;
+
     /** @component */
     private RepositoryUploader repositoryUploader;
+    
+    /** @component ArtifactRepositoryCreator */
+    ArtifactRepositoryCreator artifactRepositoryCreator;
     
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException
     {
-        final ArtifactRepository repository = getRepository(targetRepository, "stage.targetRepository");
-        for (final String gavString : getGavs()) {
+        final ArtifactRepository repository = artifactRepositoryCreator.getRepository(targetRepository, "stage.targetRepository");
+        for (final String gavString : gavs) {
             final Gav gav = Gav.valueOf(gavString);
             try
             {

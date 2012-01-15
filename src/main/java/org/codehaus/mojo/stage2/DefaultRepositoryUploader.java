@@ -20,7 +20,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.maven.artifact.deployer.ArtifactDeployer;
+import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.plugin.deploy.DeployFileMojo;
 import org.apache.maven.wagon.WagonException;
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
@@ -28,7 +31,7 @@ import org.codehaus.plexus.util.FileUtils;
 
 /**
  *
- * @author mirko 
+ * @author Mirko Friedenhagen 
  *
  * @plexus.component
  */
@@ -37,6 +40,25 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
     private Logger logger;
 
     private File basedir;
+    
+    /**
+     * @component
+     */
+    private ArtifactDeployer deployer;
+
+    /**
+     * Component used to create an artifact.
+     *
+     * @component
+     */
+    protected ArtifactFactory artifactFactory;
+
+    /**
+     * @parameter default-value="${localRepository}"
+     * @required
+     * @readonly
+     */
+    private ArtifactRepository localRepository;
 
     /**
      * @inheritDoc
@@ -47,6 +69,7 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
         if ( !basedir.exists() ) {
             throw new IllegalArgumentException("staging path " + basedir + " could not be found");
         }
+        
         logger.info("Uploading from " + basedir + " to " + targetRepository.getUrl());
         final List<String> poms = FileUtils.getFileAndDirectoryNames(basedir, "**/*.pom", "", true, true, true, true);
         logger.info("poms=" + poms);
@@ -58,6 +81,7 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
             final List artifacts = FileUtils.getFileAndDirectoryNames(dirname, rootName + "*.*", "*.sha1,*.md5", true, true, true, true);
             logger.info(artifacts.toString());
         }
+        
     }
 
     @Override
