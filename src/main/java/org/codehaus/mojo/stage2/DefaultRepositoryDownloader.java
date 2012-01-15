@@ -18,22 +18,9 @@ package org.codehaus.mojo.stage2;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-import org.apache.maven.artifact.manager.WagonConfigurationException;
-import org.apache.maven.artifact.manager.WagonManager;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.repository.Authentication;
-import org.apache.maven.wagon.ConnectionException;
-import org.apache.maven.wagon.ResourceDoesNotExistException;
-import org.apache.maven.wagon.TransferFailedException;
-import org.apache.maven.wagon.UnsupportedProtocolException;
 import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.WagonException;
-import org.apache.maven.wagon.authentication.AuthenticationException;
-import org.apache.maven.wagon.authorization.AuthorizationException;
-import org.apache.maven.wagon.repository.Repository;
-import org.codehaus.plexus.logging.LogEnabled;
-import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
