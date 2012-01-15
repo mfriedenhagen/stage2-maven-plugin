@@ -31,7 +31,7 @@ import org.apache.maven.plugin.MojoFailureException;
  */
 public abstract class AbstractRepositoryMojo extends AbstractMojo
 {
-    
+
     private static final Pattern ALT_REPO_SYNTAX_PATTERN = Pattern.compile( "(.+)::(.+)::(.+)" );
 
     /**
@@ -45,21 +45,21 @@ public abstract class AbstractRepositoryMojo extends AbstractMojo
      * @required
      */
     private String[] gavs;
-    
+
     /**
      * Component used to create a repository.
      *
      * @component
      */
     private ArtifactRepositoryFactory repositoryFactory;
-    
+
     /**
      * Map that contains the layouts.
      *
      * @component role="org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout"
      */
     private Map repositoryLayouts;
-    
+
     /**
      * @return the gavs given on the command line.
      */
@@ -68,13 +68,13 @@ public abstract class AbstractRepositoryMojo extends AbstractMojo
         return gavs;
     }
 
-    ArtifactRepository getRepository( final String artifactRepository, final String role ) throws MojoFailureException, MojoExecutionException
+    ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException
     {
         ArtifactRepository repo = null;
-        if ( artifactRepository != null )
+        if (artifactRepository != null)
         {
-            getLog().info( "Using " + role + " " + artifactRepository );
-            Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher( artifactRepository );
+            getLog().info("Using " + role + " " + artifactRepository);
+            Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher(artifactRepository);
             if ( !matcher.matches() )
             {
                 throw new MojoFailureException( artifactRepository, "Invalid syntax for " + role, "Invalid syntax for " + role + ". Use \"id::layout::url\"." );
@@ -91,7 +91,7 @@ public abstract class AbstractRepositoryMojo extends AbstractMojo
         if ( repo == null )
         {
             String msg = "List or download failed: invalid or missing '-D" + role + "=id::layout::url' parameter";
-            throw new MojoExecutionException(msg);
+            throw new MojoExecutionException( msg );
         }
         return repo;
     }
@@ -105,5 +105,5 @@ public abstract class AbstractRepositoryMojo extends AbstractMojo
         }
         return layout;
     }
-    
+
 }

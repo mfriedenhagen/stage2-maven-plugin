@@ -17,10 +17,14 @@ package org.codehaus.mojo.stage2;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.wagon.WagonException;
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
+import org.codehaus.plexus.util.FileUtils;
 
 /**
  *
@@ -44,6 +48,16 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
             throw new IllegalArgumentException("staging path " + basedir + " could not be found");
         }
         logger.info("Uploading from " + basedir + " to " + targetRepository.getUrl());
+        final List<String> poms = FileUtils.getFileAndDirectoryNames(basedir, "**/*.pom", "", true, true, true, true);
+        logger.info("poms=" + poms);
+        new HashMap<String, List<String>>();
+        for (String pom : poms) {
+            final String rootName = FileUtils.basename(FileUtils.removeExtension(pom));
+            final File dirname = new File(FileUtils.dirname(pom));
+            logger.info(rootName);
+            final List artifacts = FileUtils.getFileAndDirectoryNames(dirname, rootName + "*.*", "*.sha1,*.md5", true, true, true, true);
+            logger.info(artifacts.toString());
+        }
     }
 
     @Override
