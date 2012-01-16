@@ -16,10 +16,9 @@
 package org.codehaus.mojo.stage2;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import org.apache.maven.artifact.deployer.ArtifactDeployer;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -73,15 +72,22 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
         logger.info("Uploading from " + basedir + " to " + targetRepository.getUrl());
         final List<String> poms = FileUtils.getFileAndDirectoryNames(basedir, "**/*.pom", "", true, true, true, true);
         logger.info("poms=" + poms);
-        new HashMap<String, List<String>>();
+        final HashMap<String, Set<File>> mapOfArtifacts = new HashMap<String, Set<File>>();
         for (String pom : poms) {
-            final String rootName = FileUtils.basename(FileUtils.removeExtension(pom));
             final File dirname = new File(FileUtils.dirname(pom));
-            logger.info(rootName);
-            final List artifacts = FileUtils.getFileAndDirectoryNames(dirname, rootName + "*.*", "*.sha1,*.md5", true, true, true, true);
-            logger.info(artifacts.toString());
+            logger.info(pom);
+            final List<File> listFiles = Arrays.asList(dirname.listFiles(new FilenameFilter() {
+                                         @Override
+                                         public boolean accept(File file, String name)
+                                         {
+                                             return !name.endsWith(".md5") && !name.endsWith(".sha1");
+                                         }
+                                     }));            
+            final HashSet<File> hashSet = new HashSet<File>(listFiles.size());
+            hashSet.addAll(listFiles);
+            mapOfArtifacts.put(pom, hashSet);
         }
-        
+        logger.info(mapOfArtifacts.toString());
     }
 
     @Override
