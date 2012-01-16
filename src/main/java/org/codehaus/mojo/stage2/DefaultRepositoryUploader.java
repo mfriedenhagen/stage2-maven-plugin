@@ -76,13 +76,7 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
         for (String pom : poms) {
             final File dirname = new File(FileUtils.dirname(pom));
             logger.info(pom);
-            final List<File> listFiles = Arrays.asList(dirname.listFiles(new FilenameFilter() {
-                                         @Override
-                                         public boolean accept(File file, String name)
-                                         {
-                                             return !name.endsWith(".md5") && !name.endsWith(".sha1");
-                                         }
-                                     }));            
+            final List<File> listFiles = Arrays.asList(dirname.listFiles(new PomFilenameFilter()));            
             final HashSet<File> hashSet = new HashSet<File>(listFiles.size());
             hashSet.addAll(listFiles);
             mapOfArtifacts.put(pom, hashSet);
@@ -93,5 +87,19 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
     @Override
     public void enableLogging( Logger logger ) {
         this.logger = logger;
+    }
+
+    private static class PomFilenameFilter implements FilenameFilter
+    {
+
+        public PomFilenameFilter()
+        {
+        }
+
+        @Override
+        public boolean accept(File file, String name)
+        {
+            return !name.endsWith(".md5") && !name.endsWith(".sha1");
+        }
     }
 }
