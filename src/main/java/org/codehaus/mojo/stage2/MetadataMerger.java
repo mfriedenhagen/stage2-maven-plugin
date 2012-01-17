@@ -36,7 +36,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import org.apache.maven.artifact.repository.metadata.Metadata;
-import org.apache.maven.artifact.repository.metadata.Plugin;
 import org.apache.maven.artifact.repository.metadata.Versioning;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Writer;
@@ -162,7 +161,7 @@ class MetadataMerger {
      * 
      * @return The generated model, never <code>null</code>.
      */
-    Model generateModel(String groupId, String artifactId, String version, String packaging) {
+    private Model generateModel(String groupId, String artifactId, String version, String packaging) {
         Model model = new Model();
         model.setModelVersion("4.0.0");
         model.setGroupId(groupId);
@@ -202,7 +201,7 @@ class MetadataMerger {
         return encode(digest.digest());
     }
 
-    protected String encode(byte[] binaryData) {
+    private String encode(byte[] binaryData) {
         if (binaryData.length != 16 && binaryData.length != 20) {
             int bitLength = binaryData.length * 8;
             throw new IllegalArgumentException("Unrecognised length for binary data: " + bitLength + " bits");
