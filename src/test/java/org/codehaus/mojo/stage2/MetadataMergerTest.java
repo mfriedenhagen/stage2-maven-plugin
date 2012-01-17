@@ -16,6 +16,7 @@
 package org.codehaus.mojo.stage2;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -71,6 +72,33 @@ public class MetadataMergerTest
         commonChecks(metadataContent, latest, metadata);
         assertThat(metadataContent, JUnitMatchers.containsString("<version>" + previous + "</version>"));
 
+    }
+
+    @Test(expected=IOException.class)
+    public void testCorruptMetadata() throws URISyntaxException, IOException {
+        final File resource = resource("maven-metadata-corrupt.xml");
+        MetadataMerger instance = new MetadataMerger(resource);
+        instance.mergeMetadata(resource);
+    }
+
+    @Test(expected=IOException.class)
+    public void testCorruptPom() throws URISyntaxException, IOException {
+        final File pomFile = resource("corrupt-pom.xml");
+        final File metadata = new File(pomFile.getParentFile(), "maven-metadata-corrupt-pom.xml");
+        MetadataMerger instance = new MetadataMerger(metadata);
+        instance.mergeMetadata(pomFile);
+    }
+
+    @Test
+    public void testInvalidPom() throws URISyntaxException {
+        final File pomFile = resource("invalid-pom.xml");
+        final File metadata = new File(pomFile.getParentFile(), "maven-metadata-invalid-pom.xml");
+        MetadataMerger instance = new MetadataMerger(metadata);
+        try {
+            instance.mergeMetadata(pomFile);
+        } catch (IOException e) {
+            assertEquals("[0]  'version' is missing.", e.getMessage().trim());
+        }
     }
 
     void commonChecks(final String metadataContent, String latest, final File metadata) {
