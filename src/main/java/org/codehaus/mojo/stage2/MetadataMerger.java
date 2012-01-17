@@ -96,9 +96,11 @@ class MetadataMerger {
         }
         // Regenerate the checksums as they will be different after the merger
         try {
-            final File md5 = new File(existingMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".md5");
+            final File parentFile = existingMetadataFile.getParentFile();
+            final String name = existingMetadataFile.getName();
+            final File md5 = new File(parentFile, name + "." + Constants.MD5);
             FileUtils.fileWrite(md5.getAbsolutePath(), checksum(existingMetadataFile, Constants.MD5));
-            final File sha1 = new File(existingMetadataFile.getParentFile(), Constants.MAVEN_METADATA + ".sha1");
+            final File sha1 = new File(parentFile, name + "." + Constants.SHA1);
             FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(existingMetadataFile, Constants.SHA1));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
@@ -122,11 +124,12 @@ class MetadataMerger {
         versioning.setRelease(pom.getVersion());
         versioning.setLatest(pom.getVersion());
         metadataFromPom.setVersioning(versioning);
-        if (pom.getPackaging().equals("maven-plugin")) {
-            final Plugin plugin = new Plugin();
-            plugin.setArtifactId(pom.getArtifactId());
-            metadataFromPom.addPlugin(plugin);
-        }
+        // TODO: how to set maven-plugin information?
+//        if (pom.getPackaging().equals("maven-plugin")) {
+//            final Plugin plugin = new Plugin();
+//            plugin.setArtifactId(pom.getArtifactId());
+//            metadataFromPom.addPlugin(plugin);
+//        }
         return metadataFromPom;
     }
 
@@ -147,10 +150,10 @@ class MetadataMerger {
         String packaging = model.getPackaging();
         final Model newModel = generateModel(groupId, artifactId, version, packaging);
         ModelValidator validator = new DefaultModelValidator();
-//        ModelValidationResult validationResult = validator.validate(newModel);
-//        if (validationResult.getMessageCount() > 0) {
-//            throw new IOException(validationResult.toString());
-//        }
+        ModelValidationResult validationResult = validator.validate(newModel);
+        if (validationResult.getMessageCount() > 0) {
+            throw new IOException(validationResult.toString());
+        }
         return newModel;
     }
 
@@ -205,19 +208,19 @@ class MetadataMerger {
             throw new IllegalArgumentException("Unrecognised length for binary data: " + bitLength + " bits");
         }
 
-        String retValue = "";
+        final StringBuilder retValue = new StringBuilder();
 
         for (int i = 0; i < binaryData.length; i++) {
-            String t = Integer.toHexString(binaryData[i] & 0xff);
+            final String t = Integer.toHexString(binaryData[i] & 0xff);
 
             if (t.length() == 1) {
-                retValue += ("0" + t);
+                retValue.append("0" + t);
             } else {
-                retValue += t;
+                retValue.append(t);
             }
         }
 
-        return retValue.trim();
+        return retValue.toString().trim();
     }
 
 }
