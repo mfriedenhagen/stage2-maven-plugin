@@ -52,6 +52,7 @@
         <gpg.useagent>false</gpg.useagent>
         <mojo.java.target>1.6</mojo.java.target>
         <mojo.java.source>1.6</mojo.java.source>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <licenses>
