@@ -120,8 +120,6 @@ class MetadataMerger {
         final Versioning versioning = new Versioning();
         versioning.addVersion(pom.getVersion());
         versioning.setLastUpdatedTimestamp(new Date());
-        versioning.setRelease(pom.getVersion());
-        versioning.setLatest(pom.getVersion());
         metadataFromPom.setVersioning(versioning);
         // TODO: how to set maven-plugin information?
 //        if (pom.getPackaging().equals("maven-plugin")) {

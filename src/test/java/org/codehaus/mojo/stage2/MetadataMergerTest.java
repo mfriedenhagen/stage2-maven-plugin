@@ -21,9 +21,12 @@ import java.net.URISyntaxException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.codehaus.plexus.util.FileUtils;
-import org.junit.*;
-import static org.junit.Assert.*;
-import org.junit.matchers.JUnitMatchers;
+import static org.hamcrest.CoreMatchers.not;
+import org.junit.Test;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import org.junit.runner.RunWith;
 
 /**
@@ -70,7 +73,7 @@ public class MetadataMergerTest
         instance.mergeMetadata(pomFile);
         final String metadataContent = FileUtils.fileRead(metadata, "utf-8");
         commonChecks(metadataContent, latest, metadata);
-        assertThat(metadataContent, JUnitMatchers.containsString("<version>" + previous + "</version>"));
+        assertThat(metadataContent, containsString("<version>" + previous + "</version>"));
 
     }
 
@@ -102,9 +105,9 @@ public class MetadataMergerTest
     }
 
     void commonChecks(final String metadataContent, String latest, final File metadata) {
-        assertThat(metadataContent, JUnitMatchers.containsString("<latest>" + latest + "</latest>"));
-        assertThat(metadataContent, JUnitMatchers.containsString("<release>" + latest + "</release>"));
-        assertThat(metadataContent, JUnitMatchers.containsString("<version>" + latest + "</version>"));
+        assertThat(metadataContent, not(containsString("<latest>" + latest + "</latest>")));
+        assertThat(metadataContent, not(containsString("<release>" + latest + "</release>")));
+        assertThat(metadataContent, containsString("<version>" + latest + "</version>"));
         assertTrue(new File(metadata.getAbsolutePath() + "." + Constants.MD5).canRead());
         assertTrue(new File(metadata.getAbsolutePath() + "." + Constants.SHA1).canRead());
     }
