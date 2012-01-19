@@ -30,28 +30,26 @@ import org.apache.maven.plugin.MojoFailureException;
  * @author Mirko Friedenhagen
  */
 public abstract class AbstractRepositoryMojo extends AbstractMojo {
+
     /**
-     * The GAV coordinates of the artifact that is to be copied. This is a comma separated list of coordinates like
+     * The GAV coordinates of the artifact that is to be copied. This is a comma
+     * separated list of coordinates like
      * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
-     * <p>
-     * <b>Note:</b> You may enter '*' to copy all artifacts with a specific groupId.
-     * </p>
+     * <p> <b>Note:</b> You may enter '*' to copy all artifacts with a specific
+     * groupId. </p>
      *
-     * @parameter expression="${stage.gavs}"
-     * @required
+     * @parameter expression="${stage.gavs}" @required
      */
     private String[] gavs;
-
-    /** 
-     * @component ArtifactRepositoryCreator 
+    /**
+     * @component ArtifactRepositoryCreator
      */
     private ArtifactRepositoryCreator artifactRepositoryCreator;
 
     /**
      * @return the gavs given on the command line.
      */
-    String[] getGavs()
-    {
+    String[] getGavs() {
         return gavs;
     }
 

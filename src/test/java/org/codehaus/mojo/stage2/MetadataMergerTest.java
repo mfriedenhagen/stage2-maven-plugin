@@ -22,10 +22,10 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.codehaus.plexus.util.FileUtils;
 import static org.hamcrest.CoreMatchers.not;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import org.junit.runner.RunWith;
 

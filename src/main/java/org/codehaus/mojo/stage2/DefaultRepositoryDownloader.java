@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 The Apache Software Foundation.
+ * Copyright 2012 Codehaus.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,10 @@ import org.codehaus.plexus.util.FileUtils;
 class DefaultRepositoryDownloader extends ReadOnlyRepository implements RepositoryDownloader {
 
     private File basedir;
-    
-    /** @Override */
+
+    /**
+     * @Override
+     */
     public void download(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException {
         basedir = new File(new File(System.getProperty("java.io.tmpdir"), "staging-plugin"), gav.getEncodedPath());
         deleteAndCreateTempDir();
@@ -51,11 +53,11 @@ class DefaultRepositoryDownloader extends ReadOnlyRepository implements Reposito
 
     /**
      * @param basedir
-     * @throws IOException
+     *
+     s IOException
      */
     private void deleteAndCreateTempDir() throws IOException {
         FileUtils.deleteDirectory(basedir);
         FileUtils.forceMkdir(basedir);
     }
-
 }

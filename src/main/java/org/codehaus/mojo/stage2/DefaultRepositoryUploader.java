@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 The Apache Software Foundation.
+ * Copyright 2012 Codehaus.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.codehaus.plexus.util.FileUtils;
 
 /**
  *
- * @author Mirko Friedenhagen 
+ * @author Mirko Friedenhagen
  *
  * @plexus.component
  */
@@ -39,7 +39,7 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
     private Logger logger;
 
     private File basedir;
-    
+
     /**
      * @component
      */
@@ -64,11 +64,11 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
      */
     @Override
     public void upload(ArtifactRepository targetRepository, Gav gav) throws WagonException, IOException {
-        basedir = new File( new File( System.getProperty( "java.io.tmpdir" ), "staging-plugin" ), gav.getEncodedPath() );
-        if ( !basedir.exists() ) {
+        basedir = new File(new File(System.getProperty("java.io.tmpdir"), "staging-plugin"), gav.getEncodedPath());
+        if (!basedir.exists()) {
             throw new IllegalArgumentException("staging path " + basedir + " could not be found");
         }
-        
+
         logger.info("Uploading from " + basedir + " to " + targetRepository.getUrl());
         final List<String> poms = FileUtils.getFileAndDirectoryNames(basedir, "**/*.pom", "", true, true, true, true);
         logger.info("poms=" + poms);
@@ -76,7 +76,7 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
         for (String pom : poms) {
             final File dirname = new File(FileUtils.dirname(pom));
             logger.info(pom);
-            final List<File> listFiles = Arrays.asList(dirname.listFiles(new PomFilenameFilter()));            
+            final List<File> listFiles = Arrays.asList(dirname.listFiles(new PomFilenameFilter()));
             final HashSet<File> hashSet = new HashSet<File>(listFiles.size());
             hashSet.addAll(listFiles);
             mapOfArtifacts.put(pom, hashSet);
@@ -85,21 +85,19 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
     }
 
     @Override
-    public void enableLogging( Logger logger ) {
+    public void enableLogging(Logger logger) {
         this.logger = logger;
     }
 
-    private static class PomFilenameFilter implements FilenameFilter
-    {
+    private static class PomFilenameFilter implements FilenameFilter {
 
-        public PomFilenameFilter()
-        {
+        public PomFilenameFilter() {
         }
 
         @Override
-        public boolean accept(File file, String name)
-        {
+        public boolean accept(File file, String name) {
             return !name.endsWith(".md5") && !name.endsWith(".sha1");
         }
     }
+
 }

@@ -29,16 +29,16 @@ import org.codehaus.plexus.logging.Logger;
 /**
  *
  * @author Mirko Friedenhagen
- * 
+ *
  * @plexus.component
  *
  */
 class DefaultArtifactRepositoryCreator implements LogEnabled, ArtifactRepositoryCreator {
-    
+
     private Logger logger;
-    
-    private static final Pattern ALT_REPO_SYNTAX_PATTERN = Pattern.compile( "(.+)::(.+)::(.+)" );
-    
+
+    private static final Pattern ALT_REPO_SYNTAX_PATTERN = Pattern.compile("(.+)::(.+)::(.+)");
+
     /**
      * Component used to create a repository.
      *
@@ -55,45 +55,36 @@ class DefaultArtifactRepositoryCreator implements LogEnabled, ArtifactRepository
 
     public ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException {
         ArtifactRepository repo = null;
-        if (artifactRepository != null)
-        {
+        if (artifactRepository != null) {
             logger.info("Using " + role + " " + artifactRepository);
             Matcher matcher = ALT_REPO_SYNTAX_PATTERN.matcher(artifactRepository);
-            if ( !matcher.matches() )
-            {
-                throw new MojoFailureException( artifactRepository, "Invalid syntax for " + role, "Invalid syntax for " + role + ". Use \"id::layout::url\"." );
-            }
-            else
-            {
-                String id = matcher.group( 1 ).trim();
-                String layout = matcher.group( 2 ).trim();
-                String url = matcher.group( 3 ).trim();
-                ArtifactRepositoryLayout repoLayout = getLayout( layout );
-                repo = repositoryFactory.createDeploymentArtifactRepository( id, url, repoLayout, true );
+            if (!matcher.matches()) {
+                throw new MojoFailureException(artifactRepository, "Invalid syntax for " + role, "Invalid syntax for " + role + ". Use \"id::layout::url\".");
+            } else {
+                String id = matcher.group(1).trim();
+                String layout = matcher.group(2).trim();
+                String url = matcher.group(3).trim();
+                ArtifactRepositoryLayout repoLayout = getLayout(layout);
+                repo = repositoryFactory.createDeploymentArtifactRepository(id, url, repoLayout, true);
             }
         }
-        if ( repo == null )
-        {
+        if (repo == null) {
             String msg = "List or download failed: invalid or missing '-D" + role + "=id::layout::url' parameter";
-            throw new MojoExecutionException( msg );
+            throw new MojoExecutionException(msg);
         }
         return repo;
     }
 
     @Override
-    public void enableLogging( Logger logger )
-    {
+    public void enableLogging(Logger logger) {
         this.logger = logger;
     }
-    
-    private ArtifactRepositoryLayout getLayout(String id) throws MojoExecutionException
-    {
+
+    private ArtifactRepositoryLayout getLayout(String id) throws MojoExecutionException {
         ArtifactRepositoryLayout layout = (ArtifactRepositoryLayout) repositoryLayouts.get(id);
-        if (layout == null)
-        {
+        if (layout == null) {
             throw new MojoExecutionException("Invalid repository layout: " + id);
         }
         return layout;
     }
-
 }

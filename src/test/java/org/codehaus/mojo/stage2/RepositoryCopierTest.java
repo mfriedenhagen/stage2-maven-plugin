@@ -1,12 +1,9 @@
 package org.codehaus.mojo.stage2;
 
-import org.codehaus.mojo.stage2.RepositoryCopier;
-import org.codehaus.mojo.stage2.Constants;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.List;
-
 import org.apache.maven.artifact.repository.metadata.Metadata;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
 import org.apache.maven.wagon.repository.Repository;
@@ -14,9 +11,12 @@ import org.codehaus.plexus.PlexusTestCase;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 
-/** @author Jason van Zyl */
+/**
+ * @author Jason van Zyl
+ */
 public class RepositoryCopierTest extends PlexusTestCase {
-    private String[] version = new String[] { "2.0.6" };
+
+    private String[] version = new String[]{"2.0.6"};
 
     private MetadataXpp3Reader reader = new MetadataXpp3Reader();
 
@@ -38,11 +38,11 @@ public class RepositoryCopierTest extends PlexusTestCase {
 
         copier.copy(sourceRepository, targetRepository, version);
 
-        String s[] = { "maven", "maven-artifact", "maven-artifact-manager", "maven-artifact-test", "maven-core",
-                "maven-error-diagnostics", "maven-model", "maven-monitor", "maven-plugin-api",
-                "maven-plugin-descriptor", "maven-plugin-parameter-documenter", "maven-plugin-registry",
-                "maven-profile", "maven-project", "maven-repository-metadata", "maven-script", "maven-script-ant",
-                "maven-script-beanshell", "maven-settings" };
+        String s[] = {"maven", "maven-artifact", "maven-artifact-manager", "maven-artifact-test", "maven-core",
+            "maven-error-diagnostics", "maven-model", "maven-monitor", "maven-plugin-api",
+            "maven-plugin-descriptor", "maven-plugin-parameter-documenter", "maven-plugin-registry",
+            "maven-profile", "maven-project", "maven-repository-metadata", "maven-script", "maven-script-ant",
+            "maven-script-beanshell", "maven-settings"};
 
         for (int i = 0; i < s.length; i++) {
             testMavenArtifact(targetRepo, s[i]);

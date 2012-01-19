@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 The Apache Software Foundation.
+ * Copyright 2012 Codehaus.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,10 @@ import org.apache.maven.wagon.WagonException;
  *
  */
 public class DefaultRepositoryLister extends ReadOnlyRepository implements RepositoryLister {
-    
-    /** @Override */
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void list(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException {
         final ArrayList<String> files = collectFiles(sourceRepository, gav);

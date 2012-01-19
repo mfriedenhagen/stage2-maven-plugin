@@ -1,11 +1,11 @@
 /*
- * Copyright 2012 The Apache Software Foundation.
+ * Copyright 2012 Codehaus.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,11 +35,13 @@ import org.codehaus.plexus.logging.Logger;
  */
 public abstract class ReadOnlyRepository implements LogEnabled {
 
-    /** @plexus.requirement */
+    /**
+     * @plexus.requirement
+     */
     private WagonManager wagonManager;
 
     private Logger logger;
-    
+
     Wagon createWagon(ArtifactRepository artifactRepository) throws WagonException {
         final Repository repository = new Repository(artifactRepository.getId(), artifactRepository.getUrl());
         final Authentication authentication = artifactRepository.getAuthentication();
@@ -89,7 +91,7 @@ public abstract class ReadOnlyRepository implements LogEnabled {
         logger.info("Found " + files.size() + " files in " + sourceRepository.getUrl() + gav.groupIdPath + " matching " + gav);
         return files;
     }
-    
+
     public void enableLogging(Logger logger) {
         this.logger = logger;
     }
@@ -100,5 +102,4 @@ public abstract class ReadOnlyRepository implements LogEnabled {
     Logger getLogger() {
         return logger;
     }
-    
 }

@@ -16,12 +16,13 @@
 package org.codehaus.mojo.stage2;
 
 import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.junit.*;
-import static org.junit.Assert.*;
 import static junitparams.JUnitParamsRunner.$;
+import junitparams.Parameters;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-
 
 /**
  *
@@ -34,7 +35,7 @@ public class GavTest {
      * Test of matches method, of class Gav.
      */
     @Test
-    @Parameters(method="matchesResults")
+    @Parameters(method = "matchesResults")
     public void testMatches(String versionString, String matching, String nonMatching) {
         Gav instance = Gav.valueOf(versionString);
         assertTrue(matching + " shpuld match!", instance.matches(matching));
@@ -42,51 +43,43 @@ public class GavTest {
     }
 
     private Object[] matchesResults() {
-        return $
-        (
-            $("org.codahaus.mojo:stage2-maven-plugin:1.1", "org/codahaus/mojo/stage2-maven-plugin/1.1/foo", "org/codahaus/mojo/stage2-maven-plugin/1.2/foo"),
-            $("org.codahaus.mojo:*:1.1", "org/codahaus/mojo/stage2-maven-plugin/1.1/foo", "org/codahaus/mojo/stage2-maven-plugin/1.2/foo")
-        );
+        return $(
+                $("org.codahaus.mojo:stage2-maven-plugin:1.1", "org/codahaus/mojo/stage2-maven-plugin/1.1/foo", "org/codahaus/mojo/stage2-maven-plugin/1.2/foo"),
+                $("org.codahaus.mojo:*:1.1", "org/codahaus/mojo/stage2-maven-plugin/1.1/foo", "org/codahaus/mojo/stage2-maven-plugin/1.2/foo"));
     }
 
     /**
      * Test of toString method, of class Gav.
      */
     @Test
-    @Parameters(method="toStringResults")
-    public void testToString(String versionString, String expResult)
-    {
+    @Parameters(method = "toStringResults")
+    public void testToString(String versionString, String expResult) {
         Gav instance = Gav.valueOf(versionString);
         String result = instance.toString();
-        assertEquals( expResult, result );
+        assertEquals(expResult, result);
     }
 
     private Object[] toStringResults() {
-        return $
-        (
-            $("org.codahaus.mojo:stage2-maven-plugin:1.1", "gav=org/codahaus/mojo/stage2-maven-plugin/1.1"),
-            $("org.codahaus.mojo:*:1.1", "gav=org/codahaus/mojo/*/1.1")
-        );
+        return $(
+                $("org.codahaus.mojo:stage2-maven-plugin:1.1", "gav=org/codahaus/mojo/stage2-maven-plugin/1.1"),
+                $("org.codahaus.mojo:*:1.1", "gav=org/codahaus/mojo/*/1.1"));
     }
 
     /**
      * Test of getEncodedPath method, of class Gav.
      */
     @Test
-    @Parameters(method="encodedPaths")
-    public void testGetEncodedPath(String versionString, String encodedPath)
-    {
+    @Parameters(method = "encodedPaths")
+    public void testGetEncodedPath(String versionString, String encodedPath) {
         Gav instance = Gav.valueOf(versionString);
         String result = instance.getEncodedPath();
         assertEquals(encodedPath, result);
     }
 
     private Object[] encodedPaths() {
-        return $
-        (
-            $("org.codahaus.mojo:stage2-maven-plugin:1.1", "org.codahaus.mojo%3Astage2-maven-plugin%3A1.1"),
-            $("org.codahaus.mojo:*:1.1", "org.codahaus.mojo%3AALL_ARTIFACTS%3A1.1")
-        );
+        return $(
+                $("org.codahaus.mojo:stage2-maven-plugin:1.1", "org.codahaus.mojo%3Astage2-maven-plugin%3A1.1"),
+                $("org.codahaus.mojo:*:1.1", "org.codahaus.mojo%3AALL_ARTIFACTS%3A1.1"));
     }
 
     /**
@@ -97,8 +90,7 @@ public class GavTest {
         "org.codahaus.mojo:stage2-maven-plugin:1.1, org.codahaus.mojo, stage2-maven-plugin, 1.1",
         "org.codahaus.mojo:*:1.1, org.codahaus.mojo, *, 1.1"
     })
-    public void testValueOf(String versionString, String groupId, String artifactId, String version)
-    {
+    public void testValueOf(String versionString, String groupId, String artifactId, String version) {
         Gav result = Gav.valueOf(versionString);
         assertEquals(groupId, result.groupId);
         assertEquals(artifactId, result.artifactId);

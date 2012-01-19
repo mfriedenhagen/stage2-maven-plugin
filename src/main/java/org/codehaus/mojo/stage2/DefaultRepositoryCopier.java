@@ -1,23 +1,19 @@
-package org.codehaus.mojo.stage2;
-
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright 2012 Codehaus.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+package org.codehaus.mojo.stage2;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,10 +46,14 @@ import org.codehaus.plexus.util.FileUtils;
  */
 public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
-    /** @plexus.requirement */
+    /**
+     * @plexus.requirement
+     */
     private Invoker invoker;
 
-    /** @plexus.requirement */
+    /**
+     * @plexus.requirement
+     */
     private WagonManager wagonManager;
 
     private Logger logger;
@@ -68,10 +68,12 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
     /**
      * @param sourceRepository
-     * @param targetRepository
-     * @param gav
-     * @throws IOException
-     * @throws WagonException 
+     * param targetRepository
+     * param gav
+     *
+     * @ throws IOException
+     *
+     * @throws WagonException
      */
     void copy(Repository sourceRepository, Repository targetRepository, final Gav gav) throws IOException, WagonException {
         // Work directory
@@ -100,20 +102,22 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
     private List<File> getPoms(List<String> files, File basedir) {
         ArrayList<File> poms = new ArrayList<File>();
         for (String file : files) {
-            if (FileUtils.extension(file).equals("pom")){
+            if (FileUtils.extension(file).equals("pom")) {
                 poms.add(new File(basedir, file));
             }
-                
+
         }
         return poms;
     }
 
     /**
      * @param repository
+     *
      * @return
-     * @throws WagonException 
+     *
+     * @throws WagonException
      */
-    Wagon createWagon(Repository repository) throws WagonException{
+    Wagon createWagon(Repository repository) throws WagonException {
         final Wagon wagon = wagonManager.getWagon(repository);
         final AuthenticationInfo authenticationInfo = new AuthenticationInfo();
         authenticationInfo.setUserName(repository.getUsername());
@@ -129,15 +133,17 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
      * targetRepositoryUrl and pull those down locally so that we can merge the metadata.
      *
      * @param files
-     * @param basedir
-     * @param targetWagon
-     * @param targetRepositoryUri 
-     * @param targetRepositoryUri 
-     * @param targetRepositoryUrl
+              * @ param basedir
+     * @ param targetWagon
+     * @param targetRepositoryUri
+* targetRepositoryUri
+     * targetRepositoryUrl
+     *
      * @return
-     * @throws WagonException 
-     * @throws IOException 
-     * @throws TransferFailedException 
+     *
+     * @throws WagonException
+     * @throws IOException
+     * @throws TransferFailedException
      */
     void downloadAndMergeMetadata(List<String> files, File basedir, Wagon targetWagon, URI targetRepositoryUri) throws WagonException, IOException {
         logger.info("Downloading metadata from the target repository.");
@@ -170,10 +176,12 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
     /**
      * @param files
-     * @param basedir
-     * @param targetWagon
+              * @ param basedir
+     * @ param targetWagon
      * @param targetRepositoryUri
-     * @throws TransferFailedException
+*
+     * s TransferFailedException
+     *
      * @throws ResourceDoesNotExistException
      * @throws AuthorizationException
      */
@@ -187,13 +195,14 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
     /**
      * @param sourceRepository
-     * @param basedir
-     * @param gav
+     * param basedir
+     * @ param gav
+     *
      * @return
-     * @throws WagonException 
+     *
+     * @throws WagonException
      */
-    List<String> collectAndDownloadFiles(Repository sourceRepository, File basedir, final Gav gav) throws WagonException
-             {
+    List<String> collectAndDownloadFiles(Repository sourceRepository, File basedir, final Gav gav) throws WagonException {
         List<String> files = new ArrayList<String>();
 
         final Wagon sourceWagon = createWagon(sourceRepository);
@@ -237,7 +246,8 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
     /**
      * @param basedir
-     * @throws IOException
+*
+     * s IOException
      */
     void deleteAndCreateTempDir(File basedir) throws IOException {
         logger.info("Writing all output to " + basedir);
@@ -246,7 +256,6 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
 
         basedir.mkdirs();
     }
-
 
     private void scan(Wagon wagon, String basePath, List<String> collected) {
         try {

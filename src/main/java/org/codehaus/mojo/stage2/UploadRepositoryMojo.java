@@ -17,7 +17,6 @@ package org.codehaus.mojo.stage2;
 
 import java.io.IOException;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.deploy.AbstractDeployMojo;
@@ -25,26 +24,27 @@ import org.apache.maven.wagon.WagonException;
 
 /**
  * Uploads artifacts from a temporary directory to a repository.
- * 
+ *
  * @author Mirko Friedenhagen
  *
  * @requiresProject false
  * @goal upload
  */
 public class UploadRepositoryMojo extends AbstractDeployMojo {
-  /**
+
+    /**
      * Specifies an repository to which the project artifacts should be uploaded.
-     * 
+     *
      * <br/>
-     * 
+     *
      * Format: id::layout::url
-     * 
+     *
      * @parameter expression="${stage.targetRepository}"
      * @required
      */
     private String targetRepository;
 
-   /**
+    /**
      * The GAV coordinates of the artifact that is to be copied. This is a comma separated list of coordinates like
      * <tt>de.friedenhagen.multimodule:*:1.24,de.friedenhagen.multimodule:parent:1.25</tt>
      * <p>
@@ -56,31 +56,28 @@ public class UploadRepositoryMojo extends AbstractDeployMojo {
      */
     private String[] gavs;
 
-    /** @component */
+    /**
+     * @component
+     */
     private RepositoryUploader repositoryUploader;
-    
-    /** @component ArtifactRepositoryCreator */
+
+    /**
+     * @component ArtifactRepositoryCreator
+     */
     ArtifactRepositoryCreator artifactRepositoryCreator;
-    
+
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException
-    {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         final ArtifactRepository repository = artifactRepositoryCreator.getRepository(targetRepository, "stage.targetRepository");
         for (final String gavString : gavs) {
             final Gav gav = Gav.valueOf(gavString);
-            try
-            {
+            try {
                 repositoryUploader.upload(repository, gav);
-            }
-            catch (WagonException e)
-            {
+            } catch (WagonException e) {
                 throw new MojoExecutionException("Could not upload to " + targetRepository, e);
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 throw new MojoExecutionException("Could not upload to " + targetRepository, e);
             }
         }
     }
-    
 }

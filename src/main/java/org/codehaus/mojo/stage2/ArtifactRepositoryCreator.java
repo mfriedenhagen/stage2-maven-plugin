@@ -24,8 +24,8 @@ import org.apache.maven.plugin.MojoFailureException;
  * @author Mirko Friedenhagen
  */
 public interface ArtifactRepositoryCreator {
-    
+
     String ROLE = ArtifactRepositoryCreator.class.getName();
-        
+
     ArtifactRepository getRepository(final String artifactRepository, final String role) throws MojoFailureException, MojoExecutionException;
 }

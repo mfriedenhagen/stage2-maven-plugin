@@ -1,27 +1,19 @@
-/**
- * Copyright 2012 Mirko Friedenhagen 
- */
-
-package org.codehaus.mojo.stage2;
-
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright 2012 Codehaus.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+package org.codehaus.mojo.stage2;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,7 +26,6 @@ import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
-
 import org.apache.maven.artifact.repository.metadata.Metadata;
 import org.apache.maven.artifact.repository.metadata.Versioning;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
@@ -83,7 +74,8 @@ class MetadataMerger {
 
     /**
      * @param existingMetadata
-     * @throws IOException
+     *
+     s IOException
      */
     private void writeMetadata(final Metadata existingMetadata) throws IOException {
         // Write back the merged data.
@@ -108,7 +100,9 @@ class MetadataMerger {
 
     /**
      * @param pomFile
+     *
      * @return
+     *
      * @throws IOException
      */
     private Metadata createMetadataFromPom(File pomFile) throws IOException {
@@ -156,8 +150,9 @@ class MetadataMerger {
 
     /**
      * Generates a minimal model from the user-supplied artifact information.
-     * 
-     * @return The generated model, never <code>null</code>.
+     *
+     * @return The generated model, never
+     * <code>null</code>.
      */
     private Model generateModel(String groupId, String artifactId, String version, String packaging) {
         Model model = new Model();
@@ -219,5 +214,4 @@ class MetadataMerger {
 
         return retValue.toString().trim();
     }
-
 }
