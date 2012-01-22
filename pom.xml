@@ -269,6 +269,7 @@
                     <effort>Max</effort>
                     <debug>false</debug>
                     <relaxed>false</relaxed>
+                    <excludeFilterFile>src/conf/findbugs-exclude.xml</excludeFilterFile>
                 </configuration>
             </plugin>
         </plugins>
