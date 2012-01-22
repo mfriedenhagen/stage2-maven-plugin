@@ -2,8 +2,6 @@
 <FindBugsFilter>
     <Match>
         <Package name="~.*org\.codehaus\.mojo\.stage2" />
-        <Bug code="NP_UNWRITTEN_FIELD"/>
-        <Bug code="UWF_UNWRITTEN_FIELD"/>
-        <Bug code="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+        <Bug pattern="NP_UNWRITTEN_FIELD,UWF_UNWRITTEN_FIELD,UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
 </FindBugsFilter>
