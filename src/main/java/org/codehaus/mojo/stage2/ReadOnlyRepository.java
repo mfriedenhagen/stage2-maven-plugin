@@ -44,7 +44,11 @@ public abstract class ReadOnlyRepository implements LogEnabled {
 
     Wagon createWagon(ArtifactRepository artifactRepository) throws WagonException {
         final Repository repository = new Repository(artifactRepository.getId(), artifactRepository.getUrl());
-        final Authentication authentication = artifactRepository.getAuthentication();
+        try {
+            final Authentication authentication = artifactRepository.getAuthentication();
+        } catch (AbstractMethodError e) {
+            getLogger().info("No authentication available" + e);
+        }
         final Wagon wagon = wagonManager.getWagon(repository);
         wagon.connect(repository);
         return wagon;
