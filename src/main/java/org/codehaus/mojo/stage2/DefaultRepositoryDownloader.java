@@ -32,11 +32,18 @@ class DefaultRepositoryDownloader extends ReadOnlyRepository implements Reposito
 
     private File basedir;
 
+    private final File tempDir;
+
+    public DefaultRepositoryDownloader() {
+        this.tempDir = new File(System.getProperty("java.io.tmpdir"), "staging-plugin");
+    }
+
     /**
-     * @Override
+     * {@inheritDoc}
      */
+    @Override
     public void download(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException {
-        basedir = new File(new File(System.getProperty("java.io.tmpdir"), "staging-plugin"), gav.getEncodedPath());
+        basedir = new File(tempDir, gav.getEncodedPath());
         deleteAndCreateTempDir();
         getLogger().info("Gathering artifacts from " + sourceRepository.getUrl() + ", gav=" + gav + " to " + basedir);
         ArrayList<String> files = collectFiles(sourceRepository, gav);
