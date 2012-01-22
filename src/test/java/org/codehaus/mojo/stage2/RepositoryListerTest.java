@@ -48,7 +48,7 @@ public class RepositoryListerTest extends PlexusTestCase {
         assertEquals(513, collectFiles.size());
     }
 
-        /**
+    /**
      * Test of list method, of class RepositoryLister.
      */
     public void testListMaven() throws Exception {
@@ -56,5 +56,14 @@ public class RepositoryListerTest extends PlexusTestCase {
         final ArrayList<String> collectFiles = instance.collectFiles(sourceRepository, gav);
         assertEquals(9, collectFiles.size());
         instance.list(sourceRepository, gav);
+    }
+
+    /**
+     * Test of list method, of class RepositoryLister.
+     */
+    public void testListMavenPlugins() throws Exception {
+        Gav gav = Gav.valueOf("org.apache.maven:maven-plugin-.*:2.0.6");
+        final ArrayList<String> collectFiles = instance.collectFiles(sourceRepository, gav);
+        assertEquals(108, collectFiles.size());
     }
 }
