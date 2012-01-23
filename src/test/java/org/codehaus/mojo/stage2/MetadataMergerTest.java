@@ -80,8 +80,9 @@ public class MetadataMergerTest
     @Test(expected=IOException.class)
     public void testCorruptMetadata() throws URISyntaxException, IOException {
         final File resource = resource("maven-metadata-corrupt.xml");
+        final File pomFile = resource("pom-pom.xml");
         MetadataMerger instance = new MetadataMerger(resource);
-        instance.mergeMetadata(resource);
+        instance.mergeMetadata(pomFile);
     }
 
     @Test(expected=IOException.class)
