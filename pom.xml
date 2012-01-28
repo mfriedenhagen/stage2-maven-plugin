@@ -33,7 +33,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/mfriedenhagen/stage2-maven-plugin.git</connection>
-        <developerConnection>scm:git@github.com:mfriedenhagen/stage2-maven-plugin.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:mfriedenhagen/stage2-maven-plugin.git</developerConnection>
         <url>https://github.com/mfriedenhagen/maven-stage-plugin/</url>
     </scm>
 
@@ -169,6 +169,34 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.11</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>1.0</version>
+                    <executions>
+                        <execution>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>create</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.3.2</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Build>${buildNumber}</Implementation-Build>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -244,6 +272,10 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
