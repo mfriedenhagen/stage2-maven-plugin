@@ -29,7 +29,7 @@ public class RepositoryListerTest extends PlexusTestCase {
 
     private DefaultRepositoryLister instance;
 
-    private final String source = "foo::default::" + "file:" + getBasedir() + "/src/test/staging-repository";
+    private final String source = "foo::default::" + "file:" + getBasedir() + "/target/test-classes/staging-repository";
 
     private ArtifactRepository sourceRepository;
 
