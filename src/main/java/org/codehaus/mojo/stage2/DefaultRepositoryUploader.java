@@ -18,11 +18,17 @@ package org.codehaus.mojo.stage2;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.*;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.apache.maven.artifact.deployer.ArtifactDeployer;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.plugin.deploy.DeployFileMojo;
+import org.apache.maven.wagon.ResourceDoesNotExistException;
+import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.WagonException;
 import org.codehaus.plexus.logging.LogEnabled;
 import org.codehaus.plexus.logging.Logger;
@@ -34,7 +40,7 @@ import org.codehaus.plexus.util.FileUtils;
  *
  * @plexus.component
  */
-class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
+class DefaultRepositoryUploader extends RepositoryHelper implements RepositoryUploader, LogEnabled {
 
     private Logger logger;
 
@@ -60,44 +66,64 @@ class DefaultRepositoryUploader implements RepositoryUploader, LogEnabled {
     private ArtifactRepository localRepository;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void upload(ArtifactRepository targetRepository, Gav gav) throws WagonException, IOException {
         basedir = new File(new File(System.getProperty("java.io.tmpdir"), "staging-plugin"), gav.getEncodedPath());
         if (!basedir.exists()) {
-            throw new IllegalArgumentException("staging path " + basedir + " could not be found");
+            throw new IllegalArgumentException("staging path " + basedir + " could not be found, did you download the artifacts?");
         }
-
         logger.info("Uploading from " + basedir + " to " + targetRepository.getUrl());
-        final List<String> poms = FileUtils.getFileAndDirectoryNames(basedir, "**/*.pom", "", true, true, true, true);
-        logger.info("poms=" + poms);
-        final HashMap<String, Set<File>> mapOfArtifacts = new HashMap<String, Set<File>>();
-        for (String pom : poms) {
-            final File dirname = new File(FileUtils.dirname(pom));
-            logger.info(pom);
-            final List<File> listFiles = Arrays.asList(dirname.listFiles(new PomFilenameFilter()));
-            final HashSet<File> hashSet = new HashSet<File>(listFiles.size());
-            hashSet.addAll(listFiles);
-            mapOfArtifacts.put(pom, hashSet);
+        @SuppressWarnings("unchecked")
+        final List<String> files = FileUtils.getFileAndDirectoryNames(basedir, "**/*", "", false, true, true, false);
+        logger.info("files=" + files);
+        downloadAndMergeMetadata(files, createWagon(targetRepository), URI.create(targetRepository.getUrl()));
+    }
+
+    /**
+     * Now all the files are present locally and now we are going to grab the metadata files from the
+     * targetRepositoryUrl and pull those down locally so that we can merge the metadata.
+     *
+     * @param files
+     * @param targetWagon
+     * @param targetRepositoryUri
+     *
+     * @throws WagonException
+     * @throws IOException
+     * @throws TransferFailedException
+     */
+    void downloadAndMergeMetadata(List<String> files, Wagon targetWagon, URI targetRepositoryUri) throws WagonException, IOException {
+        logger.info("Downloading metadata from the target repository." + targetRepositoryUri);
+
+        for (String file : files) {
+
+            if (file.startsWith("/")) {
+                file = file.substring(1);
+            }
+
+            if (file.endsWith(Constants.POM)) {
+                final File pomFile = new File(basedir, file);
+                final File mavenMetadataFile = new File(new File(basedir, file).getParentFile().getParentFile(), Constants.MAVEN_METADATA);
+                final String relativeMavenMetadata = String.valueOf(basedir.toURI().relativize(mavenMetadataFile.toURI()));
+                final MetadataMerger metadataMerger = new MetadataMerger(mavenMetadataFile);
+                try {
+                    targetWagon.get(relativeMavenMetadata, mavenMetadataFile);
+                    logger.info("Downloaded " + targetRepositoryUri.resolve(relativeMavenMetadata) + " to " + mavenMetadataFile);
+                } catch (ResourceDoesNotExistException e) {
+                    // We don't have an equivalent on the targetRepositoryUrl side because we have something
+                    // new on the sourceRepositoryUrl side so just skip the metadata merging.
+                    metadataMerger.writeNewMetadata(pomFile);
+                    continue;
+                }
+                metadataMerger.mergeMetadata(pomFile);
+            }
+
         }
-        logger.info(mapOfArtifacts.toString());
     }
 
     @Override
     public void enableLogging(Logger logger) {
         this.logger = logger;
     }
-
-    private static class PomFilenameFilter implements FilenameFilter {
-
-        public PomFilenameFilter() {
-        }
-
-        @Override
-        public boolean accept(File file, String name) {
-            return !name.endsWith(".md5") && !name.endsWith(".sha1");
-        }
-    }
-
 }

@@ -28,7 +28,7 @@ import org.codehaus.plexus.util.FileUtils;
  * @author mirko
  * @plexus.component
  */
-class DefaultRepositoryDownloader extends ReadOnlyRepository implements RepositoryDownloader {
+class DefaultRepositoryDownloader extends RepositoryHelper implements RepositoryDownloader {
 
     private File basedir;
 

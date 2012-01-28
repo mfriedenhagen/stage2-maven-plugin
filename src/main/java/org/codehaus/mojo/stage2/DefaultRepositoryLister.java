@@ -27,7 +27,7 @@ import org.apache.maven.wagon.WagonException;
  * @plexus.component
  *
  */
-public class DefaultRepositoryLister extends ReadOnlyRepository implements RepositoryLister {
+public class DefaultRepositoryLister extends RepositoryHelper implements RepositoryLister {
 
     /**
      * {@inheritDoc}

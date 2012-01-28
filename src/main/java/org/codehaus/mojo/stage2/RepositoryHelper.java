@@ -33,7 +33,7 @@ import org.codehaus.plexus.logging.Logger;
  *
  * @author mirko
  */
-public abstract class ReadOnlyRepository implements LogEnabled {
+public abstract class RepositoryHelper implements LogEnabled {
 
     /**
      * @plexus.requirement

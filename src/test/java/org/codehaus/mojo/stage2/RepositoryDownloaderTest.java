@@ -18,7 +18,6 @@ package org.codehaus.mojo.stage2;
 import java.io.File;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.codehaus.plexus.PlexusTestCase;
-import org.junit.Test;
 
 /**
  *
@@ -33,6 +32,7 @@ public class RepositoryDownloaderTest extends PlexusTestCase {
 
     private ArtifactRepository sourceRepository;
 
+    @Override
     public void setUp() throws Exception {
         System.setProperty("java.io.tmpdir", getBasedir() + "/target/download-directory");
         instance = (DefaultRepositoryDownloader) lookup(RepositoryDownloader.ROLE);
@@ -44,7 +44,6 @@ public class RepositoryDownloaderTest extends PlexusTestCase {
     /**
      * Test of download method, of class DefaultRepositoryDownloader.
      */
-    @Test
     public void testDownload() throws Exception {
         System.out.println("download");
         Gav gav = Gav.valueOf("org.apache.maven:maven:2.0.6");

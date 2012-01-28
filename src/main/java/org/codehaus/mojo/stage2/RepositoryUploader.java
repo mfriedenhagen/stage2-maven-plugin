@@ -26,5 +26,14 @@ public interface RepositoryUploader {
 
     String ROLE = RepositoryUploader.class.getName();
 
+    /**
+     * Uploads the artifacts given by gav from the temporary directory to targetRepository.
+     *
+     * @param targetRepository where to upload
+     * @param gav              of the artifacts to upload
+     *
+     * @throws WagonException
+     * @throws IOException
+     */
     void upload(ArtifactRepository targetRepository, Gav gav) throws WagonException, IOException;
 }

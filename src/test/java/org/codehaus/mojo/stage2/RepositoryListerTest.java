@@ -33,6 +33,7 @@ public class RepositoryListerTest extends PlexusTestCase {
 
     private ArtifactRepository sourceRepository;
 
+    @Override
     public void setUp() throws Exception {
         instance = (DefaultRepositoryLister) lookup(RepositoryLister.ROLE);
         artifactRepositoryCreator = (ArtifactRepositoryCreator) lookup(ArtifactRepositoryCreator.ROLE);
