@@ -142,6 +142,7 @@ class MetadataMerger {
         final Model newModel = generateModel(groupId, artifactId, version, packaging);
         System.err.println("XXXXX" + newModel);
         ModelValidator validator = new DefaultModelValidator();
+        System.err.println("YYYY" + validator);
         ModelValidationResult validationResult = validator.validate(newModel);
         if (validationResult.getMessageCount() > 0) {
             throw new IOException(validationResult.toString());
