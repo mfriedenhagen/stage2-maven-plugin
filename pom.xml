@@ -48,7 +48,7 @@
     </ciManagement>
     <properties>
         <wagonVersion>2.2</wagonVersion>
-        <mavenVersion>3.0.2</mavenVersion>
+        <mavenVersion>3.0.4</mavenVersion>
         <gpg.useagent>false</gpg.useagent>
         <mojo.java.target>1.6</mojo.java.target>
         <mojo.java.source>1.6</mojo.java.source>
