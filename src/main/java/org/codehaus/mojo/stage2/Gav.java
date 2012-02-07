@@ -22,17 +22,17 @@ import org.codehaus.plexus.util.StringUtils;
 
 class Gav {
 
-    final String groupIdPath;
+    private final String groupIdPath;
 
-    final String groupId;
+    private final String groupId;
 
-    final String artifactId;
+    private final String artifactId;
 
-    final String version;
+    private final String version;
 
-    final Pattern patternFiles;
+    private final Pattern patternFiles;
 
-    final Pattern patternMeta;
+    private final Pattern patternMeta;
 
     Gav(String groupId, String artifactId, String version) {
         this.groupId = groupId;
@@ -75,13 +75,13 @@ class Gav {
 
     @Override
     public String toString() {
-        return String.format("gav=%s/%s/%s", groupIdPath, artifactId, version);
+        return String.format("gav=%s/%s/%s", getGroupIdPath(), getArtifactId(), getVersion());
     }
 
     public String getEncodedPath() {
         try {
-            final String name = artifactId.equals("*") ? "ALL_ARTIFACTS" : artifactId;
-            return URLEncoder.encode(groupId + ":" + name + ":" + version, "UTF-8");
+            final String name = getArtifactId().equals("*") ? "ALL_ARTIFACTS" : getArtifactId();
+            return URLEncoder.encode(getGroupId() + ":" + name + ":" + getVersion(), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
@@ -94,5 +94,33 @@ class Gav {
                     "version must have groupId:artifactId:version, where artifactId may be *");
         }
         return new Gav(gavComponents[0], gavComponents[1], gavComponents[2]);
+    }
+
+    /**
+     * @return the groupIdPath
+     */
+    public String getGroupIdPath() {
+        return groupIdPath;
+    }
+
+    /**
+     * @return the version
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * @return the groupId
+     */
+    public String getGroupId() {
+        return groupId;
+    }
+
+    /**
+     * @return the artifactId
+     */
+    public String getArtifactId() {
+        return artifactId;
     }
 }

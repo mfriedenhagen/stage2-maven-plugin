@@ -38,7 +38,7 @@ public class GavTest {
     @Parameters(method = "matchesResults")
     public void testMatches(String versionString, String matching, String nonMatching) {
         Gav instance = Gav.valueOf(versionString);
-        assertTrue(matching + " shpuld match!", instance.matches(matching));
+        assertTrue(matching + " should match!", instance.matches(matching));
         assertFalse(nonMatching + " shpuld NOT match!", instance.matches(nonMatching));
     }
 
@@ -92,8 +92,8 @@ public class GavTest {
     })
     public void testValueOf(String versionString, String groupId, String artifactId, String version) {
         Gav result = Gav.valueOf(versionString);
-        assertEquals(groupId, result.groupId);
-        assertEquals(artifactId, result.artifactId);
-        assertEquals(version, result.version);
+        assertEquals(groupId, result.getGroupId());
+        assertEquals(artifactId, result.getArtifactId());
+        assertEquals(version, result.getVersion());
     }
 }

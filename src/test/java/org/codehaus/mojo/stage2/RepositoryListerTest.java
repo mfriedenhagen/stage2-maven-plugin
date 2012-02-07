@@ -15,7 +15,7 @@
  */
 package org.codehaus.mojo.stage2;
 
-import java.util.ArrayList;
+import java.util.List;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.codehaus.plexus.PlexusTestCase;
 
@@ -45,7 +45,7 @@ public class RepositoryListerTest extends PlexusTestCase {
      */
     public void testListAll() throws Exception {
         Gav gav = Gav.valueOf("org.apache.maven:*:2.0.6");
-        final ArrayList<String> collectFiles = instance.collectFiles(sourceRepository, gav);
+        final List<String> collectFiles = instance.collectFiles(sourceRepository, gav);
         assertEquals(513, collectFiles.size());
     }
 
@@ -54,7 +54,7 @@ public class RepositoryListerTest extends PlexusTestCase {
      */
     public void testListMaven() throws Exception {
         Gav gav = Gav.valueOf("org.apache.maven:maven:2.0.6");
-        final ArrayList<String> collectFiles = instance.collectFiles(sourceRepository, gav);
+        final List<String> collectFiles = instance.collectFiles(sourceRepository, gav);
         assertEquals(9, collectFiles.size());
         instance.list(sourceRepository, gav);
     }
@@ -64,7 +64,7 @@ public class RepositoryListerTest extends PlexusTestCase {
      */
     public void testListMavenPlugins() throws Exception {
         Gav gav = Gav.valueOf("org.apache.maven:maven-plugin-.*:2.0.6");
-        final ArrayList<String> collectFiles = instance.collectFiles(sourceRepository, gav);
+        final List<String> collectFiles = instance.collectFiles(sourceRepository, gav);
         assertEquals(108, collectFiles.size());
     }
 }

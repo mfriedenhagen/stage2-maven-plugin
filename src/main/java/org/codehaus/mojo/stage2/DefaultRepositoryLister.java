@@ -16,7 +16,7 @@
 package org.codehaus.mojo.stage2;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.wagon.WagonException;
 
@@ -34,7 +34,7 @@ public class DefaultRepositoryLister extends RepositoryHelper implements Reposit
      */
     @Override
     public void list(ArtifactRepository sourceRepository, Gav gav) throws WagonException, IOException {
-        final ArrayList<String> files = collectFiles(sourceRepository, gav);
+        final List<String> files = collectFiles(sourceRepository, gav);
         getLogger().info("Found " + files + " at " + sourceRepository.getUrl() + " matching " + gav);
     }
 }

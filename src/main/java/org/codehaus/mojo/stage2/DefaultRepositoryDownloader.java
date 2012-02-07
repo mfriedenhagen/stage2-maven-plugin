@@ -17,7 +17,7 @@ package org.codehaus.mojo.stage2;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.WagonException;
@@ -46,7 +46,7 @@ class DefaultRepositoryDownloader extends RepositoryHelper implements Repository
         basedir = new File(tempDir, gav.getEncodedPath());
         deleteAndCreateTempDir();
         getLogger().info("Gathering artifacts from " + sourceRepository.getUrl() + ", gav=" + gav + " to " + basedir);
-        ArrayList<String> files = collectFiles(sourceRepository, gav);
+        List<String> files = collectFiles(sourceRepository, gav);
         getLogger().info("Downloading " + files.size() + " files from the source repository to " + basedir);
         final Wagon sourceWagon = createWagon(sourceRepository);
         for (final String source : files) {

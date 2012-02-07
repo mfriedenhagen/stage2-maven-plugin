@@ -90,18 +90,19 @@ public abstract class RepositoryHelper implements LogEnabled {
         return basePath.indexOf(".svn") >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index");
     }
 
-    ArrayList<String> collectFiles(ArtifactRepository sourceRepository, Gav gav) throws WagonException {
+    List<String> collectFiles(ArtifactRepository sourceRepository, Gav gav) throws WagonException {
         Wagon wagon = createWagon(sourceRepository);
         final ArrayList<String> rawFiles = new ArrayList<String>();
-        scan(wagon, gav.groupIdPath + "/", rawFiles);
-        logger.info("Found " + rawFiles.size() + " files in " + sourceRepository.getUrl() + gav.groupIdPath);
+        final String groupIdPath = gav.getGroupIdPath();
+        scan(wagon, groupIdPath + "/", rawFiles);
+        logger.info("Found " + rawFiles.size() + " files in " + sourceRepository.getUrl() + groupIdPath);
         final ArrayList<String> files = new ArrayList<String>();
         for (String file : rawFiles) {
             if (gav.matches(file)) {
                 files.add(file);
             }
         }
-        logger.info("Found " + files.size() + " files in " + sourceRepository.getUrl() + gav.groupIdPath + " matching " + gav);
+        logger.info("Found " + files.size() + " files in " + sourceRepository.getUrl() + groupIdPath + " matching " + gav);
         return files;
     }
 

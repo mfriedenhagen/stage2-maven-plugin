@@ -79,7 +79,7 @@ public class DefaultRepositoryCopier implements LogEnabled, RepositoryCopier {
         // Work directory
         String prefix = "staging-plugin";
 
-        File basedir = new File(System.getProperty("java.io.tmpdir"), prefix + "-" + gav.version);
+        File basedir = new File(System.getProperty("java.io.tmpdir"), prefix + "-" + gav.getVersion());
 
         deleteAndCreateTempDir(basedir);
 
