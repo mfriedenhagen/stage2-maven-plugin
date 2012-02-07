@@ -57,15 +57,14 @@ public abstract class RepositoryHelper implements LogEnabled {
     void scan(Wagon wagon, String basePath, List<String> collected) {
         getLogger().debug("Searching in " + basePath);
         try {
-            if (basePath.indexOf(".svn") >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index")) {
-            } else {
+            if (!isInvalidBasePath(basePath)) {
                 @SuppressWarnings(value = "unchecked")
-                List<String> files = wagon.getFileList(basePath);
+                final List<String> files = wagon.getFileList(basePath);
                 getLogger().debug("Found files in the source repository: " + files);
                 if (files.isEmpty()) {
                     collected.add(basePath);
                 } else {
-                    for (String file : files) {
+                    for (final String file : files) {
                         getLogger().debug("Found file in the source repository: " + file);
                         scan(wagon, basePath + file, collected);
                     }
@@ -79,6 +78,16 @@ public abstract class RepositoryHelper implements LogEnabled {
         } catch (AuthorizationException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Is the given basePath invalid, either coming from subversion or an index directory.
+     *
+     * @param basePath
+     * @return
+     */
+    boolean isInvalidBasePath(String basePath) {
+        return basePath.indexOf(".svn") >= 0 || basePath.startsWith(".index") || basePath.startsWith("/.index");
     }
 
     ArrayList<String> collectFiles(ArtifactRepository sourceRepository, Gav gav) throws WagonException {
