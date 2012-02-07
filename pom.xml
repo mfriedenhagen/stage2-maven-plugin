@@ -231,6 +231,13 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <configuration>
+                        <excludes>**/org/codehaus/mojo/stage2/HelpMojo.java</excludes>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -293,6 +300,13 @@
                         <format>xml</format>
                         <format>html</format>
                     </formats>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <excludes>**/org/codehaus/mojo/stage2/HelpMojo.java</excludes>
                 </configuration>
             </plugin>
             <plugin>
