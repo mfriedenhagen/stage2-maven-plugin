@@ -45,7 +45,7 @@ public abstract class RepositoryHelper implements LogEnabled {
     Wagon createWagon(ArtifactRepository artifactRepository) throws WagonException {
         final Repository repository = new Repository(artifactRepository.getId(), artifactRepository.getUrl());
         try {
-            final Authentication authentication = artifactRepository.getAuthentication();
+            artifactRepository.getAuthentication();
         } catch (AbstractMethodError e) {
             getLogger().info("No authentication available" + e);
         }

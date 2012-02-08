@@ -125,14 +125,14 @@ class MetadataMerger {
     }
 
     private Model fromPomFile(final File pom) throws IOException {
-        final XmlStreamReader reader = ReaderFactory.newXmlReader(pom);
+        final XmlStreamReader xmlReader = ReaderFactory.newXmlReader(pom);
         final Model model;
         try {
-            model = new MavenXpp3Reader().read(reader);
+            model = new MavenXpp3Reader().read(xmlReader);
         } catch (XmlPullParserException e) {
             throw new IOException("Could not create model from " + pom, e);
         } finally {
-            reader.close();
+            xmlReader.close();
         }
         final Parent parent = model.getParent();
         String groupId = model.getGroupId() == null ? parent.getGroupId() : model.getGroupId();

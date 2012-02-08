@@ -64,7 +64,7 @@ public class UploadRepositoryMojo extends AbstractDeployMojo {
     /**
      * @component ArtifactRepositoryCreator
      */
-    ArtifactRepositoryCreator artifactRepositoryCreator;
+    private ArtifactRepositoryCreator artifactRepositoryCreator;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {

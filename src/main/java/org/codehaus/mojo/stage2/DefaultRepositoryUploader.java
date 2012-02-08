@@ -56,7 +56,7 @@ class DefaultRepositoryUploader extends RepositoryHelper implements RepositoryUp
      *
      * @component
      */
-    protected ArtifactFactory artifactFactory;
+    private ArtifactFactory artifactFactory;
 
     /**
      * @parameter default-value="${localRepository}"
