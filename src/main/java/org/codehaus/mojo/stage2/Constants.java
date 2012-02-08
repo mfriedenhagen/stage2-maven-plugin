@@ -31,4 +31,5 @@ final class Constants {
 
     public static final String MAVEN_METADATA = "maven-metadata.xml";
 
+    private Constants() {}
 }

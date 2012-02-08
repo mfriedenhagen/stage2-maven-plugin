@@ -94,7 +94,7 @@ class MetadataMerger {
             final File sha1 = new File(parentFile, name + "." + Constants.SHA1);
             FileUtils.fileWrite(sha1.getAbsolutePath(), checksum(existingMetadataFile, Constants.SHA1));
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -171,7 +171,7 @@ class MetadataMerger {
         try {
             return reader.read(fileReader);
         } catch (XmlPullParserException e) {
-            throw new IOException("Metadata file is corrupt " + metadataFile + " Reason: " + e.getMessage());
+            throw new IOException("Metadata file is corrupt " + metadataFile, e);
         } finally {
             fileReader.close();
         }
