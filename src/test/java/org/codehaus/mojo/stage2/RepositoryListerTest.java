@@ -27,7 +27,7 @@ public class RepositoryListerTest extends PlexusTestCase {
 
     private ArtifactRepositoryCreator artifactRepositoryCreator;
 
-    private DefaultRepositoryLister instance;
+    private DefaultRepositoryLister sut;
 
     private final String source = "foo::default::" + "file:" + getBasedir() + "/target/test-classes/staging-repository";
 
@@ -35,7 +35,7 @@ public class RepositoryListerTest extends PlexusTestCase {
 
     @Override
     public void setUp() throws Exception {
-        instance = (DefaultRepositoryLister) lookup(RepositoryLister.ROLE);
+        sut = (DefaultRepositoryLister) lookup(RepositoryLister.ROLE);
         artifactRepositoryCreator = (ArtifactRepositoryCreator) lookup(ArtifactRepositoryCreator.ROLE);
         sourceRepository = artifactRepositoryCreator.getRepository(source, "stage.repository");
     }
@@ -45,7 +45,7 @@ public class RepositoryListerTest extends PlexusTestCase {
      */
     public void testListAll() throws Exception {
         Gav gav = Gav.valueOf("org.apache.maven:*:2.0.6");
-        final List<String> collectFiles = instance.collectFiles(sourceRepository, gav);
+        final List<String> collectFiles = sut.collectFiles(sourceRepository, gav);
         assertEquals(513, collectFiles.size());
     }
 
@@ -54,9 +54,9 @@ public class RepositoryListerTest extends PlexusTestCase {
      */
     public void testListMaven() throws Exception {
         Gav gav = Gav.valueOf("org.apache.maven:maven:2.0.6");
-        final List<String> collectFiles = instance.collectFiles(sourceRepository, gav);
+        final List<String> collectFiles = sut.collectFiles(sourceRepository, gav);
         assertEquals(9, collectFiles.size());
-        instance.list(sourceRepository, gav);
+        sut.list(sourceRepository, gav);
     }
 
     /**
@@ -64,7 +64,7 @@ public class RepositoryListerTest extends PlexusTestCase {
      */
     public void testListMavenPlugins() throws Exception {
         Gav gav = Gav.valueOf("org.apache.maven:maven-plugin-.*:2.0.6");
-        final List<String> collectFiles = instance.collectFiles(sourceRepository, gav);
+        final List<String> collectFiles = sut.collectFiles(sourceRepository, gav);
         assertEquals(108, collectFiles.size());
     }
 }

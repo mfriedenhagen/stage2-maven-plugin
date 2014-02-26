@@ -26,7 +26,7 @@ import org.codehaus.plexus.PlexusTestCase;
 public class RepositoryDownloaderTest extends PlexusTestCase {
     private ArtifactRepositoryCreator artifactRepositoryCreator;
 
-    private DefaultRepositoryDownloader instance;
+    private DefaultRepositoryDownloader sut;
 
     private final String source = "foo::default::" + "file:" + getBasedir() + "/target/test-classes/staging-repository";
 
@@ -35,7 +35,7 @@ public class RepositoryDownloaderTest extends PlexusTestCase {
     @Override
     public void setUp() throws Exception {
         System.setProperty("java.io.tmpdir", getBasedir() + "/target/download-directory");
-        instance = (DefaultRepositoryDownloader) lookup(RepositoryDownloader.ROLE);
+        sut = (DefaultRepositoryDownloader) lookup(RepositoryDownloader.ROLE);
         artifactRepositoryCreator = (ArtifactRepositoryCreator) lookup(ArtifactRepositoryCreator.ROLE);
         sourceRepository = artifactRepositoryCreator.getRepository(source, "stage.repository");
     }
@@ -47,7 +47,7 @@ public class RepositoryDownloaderTest extends PlexusTestCase {
     public void testDownload() throws Exception {
         System.out.println("download");
         Gav gav = Gav.valueOf("org.apache.maven:maven:2.0.6");
-        instance.download(sourceRepository, gav);
+        sut.download(sourceRepository, gav);
         final File pomFile = new File(getBasedir() + "/target/download-directory/staging-plugin/org.apache.maven%3Amaven%3A2.0.6/org/apache/maven/maven/2.0.6/");
         assertTrue("Can not read " + pomFile, pomFile.canRead());
     }

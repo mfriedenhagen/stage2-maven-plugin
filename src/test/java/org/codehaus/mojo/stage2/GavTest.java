@@ -37,9 +37,9 @@ public class GavTest {
     @Test
     @Parameters(method = "matchesResults")
     public void testMatches(String versionString, String matching, String nonMatching) {
-        Gav instance = Gav.valueOf(versionString);
-        assertTrue(matching + " should match!", instance.matches(matching));
-        assertFalse(nonMatching + " shpuld NOT match!", instance.matches(nonMatching));
+        Gav sut = Gav.valueOf(versionString);
+        assertTrue(matching + " should match!", sut.matches(matching));
+        assertFalse(nonMatching + " shpuld NOT match!", sut.matches(nonMatching));
     }
 
     private Object[] matchesResults() {
@@ -54,8 +54,8 @@ public class GavTest {
     @Test
     @Parameters(method = "toStringResults")
     public void testToString(String versionString, String expResult) {
-        Gav instance = Gav.valueOf(versionString);
-        String result = instance.toString();
+        Gav sut = Gav.valueOf(versionString);
+        String result = sut.toString();
         assertEquals(expResult, result);
     }
 
@@ -71,8 +71,8 @@ public class GavTest {
     @Test
     @Parameters(method = "encodedPaths")
     public void testGetEncodedPath(String versionString, String encodedPath) {
-        Gav instance = Gav.valueOf(versionString);
-        String result = instance.getEncodedPath();
+        Gav sut = Gav.valueOf(versionString);
+        String result = sut.getEncodedPath();
         assertEquals(encodedPath, result);
     }
 

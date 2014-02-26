@@ -51,8 +51,8 @@ public class MetadataMergerTest
     public void testWriteNewMetadata(String pom, String previous, String latest) throws Exception {
         final File pomFile = resource(pom);
         final File metadata = new File(pomFile.getParentFile(), "maven-metadata-test.xml");
-        MetadataMerger instance = new MetadataMerger(metadata);
-        instance.writeNewMetadata(pomFile);
+        MetadataMerger sut = new MetadataMerger(metadata);
+        sut.writeNewMetadata(pomFile);
         final String metadataContent = FileUtils.fileRead(metadata, "utf-8");
         commonChecks(metadataContent, latest, metadata);
     }
@@ -69,8 +69,8 @@ public class MetadataMergerTest
     public void testMergeMetadata(String existingMeta, String pom, String previous, String latest) throws Exception {
         final File pomFile = resource(pom);
         final File metadata = resource(existingMeta);
-        MetadataMerger instance = new MetadataMerger(metadata);
-        instance.mergeMetadata(pomFile);
+        MetadataMerger sut = new MetadataMerger(metadata);
+        sut.mergeMetadata(pomFile);
         final String metadataContent = FileUtils.fileRead(metadata, "utf-8");
         commonChecks(metadataContent, latest, metadata);
         assertThat(metadataContent, containsString("<version>" + previous + "</version>"));
@@ -81,25 +81,25 @@ public class MetadataMergerTest
     public void testCorruptMetadata() throws URISyntaxException, IOException {
         final File resource = resource("maven-metadata-corrupt.xml");
         final File pomFile = resource("pom-pom.xml");
-        MetadataMerger instance = new MetadataMerger(resource);
-        instance.mergeMetadata(pomFile);
+        MetadataMerger sut = new MetadataMerger(resource);
+        sut.mergeMetadata(pomFile);
     }
 
     @Test(expected=IOException.class)
     public void testCorruptPom() throws URISyntaxException, IOException {
         final File pomFile = resource("corrupt-pom.xml");
         final File metadata = new File(pomFile.getParentFile(), "maven-metadata-corrupt-pom.xml");
-        MetadataMerger instance = new MetadataMerger(metadata);
-        instance.mergeMetadata(pomFile);
+        MetadataMerger sut = new MetadataMerger(metadata);
+        sut.mergeMetadata(pomFile);
     }
 
     @Test
     public void testInvalidPom() throws URISyntaxException {
         final File pomFile = resource("invalid-pom.xml");
         final File metadata = new File(pomFile.getParentFile(), "maven-metadata-invalid-pom.xml");
-        MetadataMerger instance = new MetadataMerger(metadata);
+        MetadataMerger sut = new MetadataMerger(metadata);
         try {
-            instance.mergeMetadata(pomFile);
+            sut.mergeMetadata(pomFile);
         } catch (IOException e) {
             assertEquals("[0]  'version' is missing.", e.getMessage().trim());
         }
